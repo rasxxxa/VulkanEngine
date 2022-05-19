@@ -10,6 +10,7 @@ Mesh::Mesh(VkPhysicalDevice device, VkDevice newDevice, VkQueue transferQueue, V
 	CreateVertexBuffer(transferQueue, transferCommandPool, vertices);
 	CreateIndexBuffer(transferQueue, transferCommandPool, indices);
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	model.m_model = glm::mat4(1.0f);
 }
 
 int Mesh::GetVertexCount()

@@ -10,7 +10,7 @@
 
 GLFWwindow* window;
 VulkanRenderer renderer;
-void InitWindow(std::string name = "Test window", const int width = 1920, const int height = 1080)
+void InitWindow(std::string name = "Test window", const int width = 600, const int height = 600)
 {
 	// Initialize GLFW
 	glfwInit();
@@ -27,9 +27,35 @@ void InitWindow(std::string name = "Test window", const int width = 1920, const 
 
 void RunWindow()
 {
+
+	float angle = 0.0f;
+	float deltaTime = 0.0f;
+	float lastTime = 0.0f;
+
 	while (!glfwWindowShouldClose(window))
 	{
 		glfwPollEvents();
+
+		float now = glfwGetTime();
+		deltaTime = now - lastTime;
+		lastTime = now;
+
+		angle += 10.0f * deltaTime;
+		if (angle > 360.0f)
+			angle -= 360.0f;
+
+		glm::mat4 firstModel(1.0f);
+		glm::mat4 secondModel(1.0f);
+
+		//firstModel = glm::translate(firstModel, glm::vec3(0.0f, 0.0f, -5.0f));
+		//firstModel = glm::rotate(firstModel, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		//secondModel = glm::translate(secondModel, glm::vec3(2.0f, 0.0f, 5.0f));
+		//secondModel = glm::rotate(secondModel, glm::radians(-angle * 100), glm::vec3(0.0f, 0.0f, 1.0f));
+
+		//renderer.UpdateModel(firstModel, 0);
+		//renderer.UpdateModel(secondModel, 1);
+
 		renderer.Draw();
 	}
 }

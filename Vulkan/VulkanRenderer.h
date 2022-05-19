@@ -3,6 +3,8 @@
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include <stdexcept>
 #include <vector>
 #include <algorithm>
@@ -29,12 +31,37 @@ private:
 	VkSurfaceKHR surface;
 	VkSwapchainKHR swapchain;
 
+	VkDeviceSize minUniformBUfferOffset;
+	size_t modelUniformAlignment;
+
 	// Scene objects
 	std::vector<Mesh> meshList;
+
+
+	// Scene settings
+	struct ViewProjection
+	{
+		glm::mat4 m_projection;
+		glm::mat4 m_view;
+	} modelviewprojection;
 
 	std::vector<SwapChainImage> swapChainImages;
 	std::vector<VkFramebuffer> swapChainFrameBuffers;
 	std::vector<VkCommandBuffer> commandBuffers;
+
+	// Descriptors
+	VkDescriptorSetLayout descriptorSetLayout;
+
+	VkDescriptorPool descriptorPool;
+	std::vector<VkDescriptorSet> descriptorSets;
+
+	std::vector<VkBuffer> uniformBuffer;
+	std::vector<VkDeviceMemory> uniformBufferMemory;
+
+	std::vector<VkBuffer> modelUniformBuffer;
+	std::vector<VkDeviceMemory> modelUniformBufferMemory;
+
+	UniformBufferObjectModel* modelTransferSpace;
 
 	// Utility
 	VkFormat swapChainImageFormat;
@@ -76,6 +103,10 @@ private:
 
 	// Checkers functions
 	void GetPhysicalDevice();
+
+
+	void AllocateDynamicBuffer();
+
 	bool CheckDeviceSuitable(VkPhysicalDevice device);
 
 	// Getter functions
@@ -99,7 +130,13 @@ private:
 	void CreateGraphicsPipeline();
 	VkShaderModule CreateShaderModule(const std::vector<char>& code);
 	void CreateSynchronisation();
+	void CreateDescriptorSetLayout();
 
+	void CreateUniformBuffers();
+	void CreateDescriptorPool();
+	void CreateDescriptorSets();
+
+	void UpdateUniformBuffer(uint32_t imageIndex);
 
 	// PIPELINE
 	VkPipelineLayout pipelineLayout;
@@ -114,6 +151,7 @@ public:
 	virtual ~VulkanRenderer();
 	int Init(GLFWwindow* newWindow);
 	void CleanUp();
+	void UpdateModel(glm::mat4 newModel, int modelId);
 	void Draw();
 
 };

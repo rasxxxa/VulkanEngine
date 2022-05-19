@@ -6,6 +6,11 @@
 #include <vector>
 #include "Utilites.h"
 
+struct UniformBufferObjectModel
+{
+	glm::mat4 m_model;
+};
+
 class Mesh
 {
 public:
@@ -20,7 +25,13 @@ public:
 	int GetIndexCount() { return indexCount; };
 	VkBuffer GetIndexBuffer() { return indexBuffer; };
 
+	void SetModel(glm::mat4 model) { this->model.m_model = model; };
+	UniformBufferObjectModel GetModel() { return model; };
+
 private:
+
+	UniformBufferObjectModel model;
+
 	int vertexCount;
 	VkBuffer vertexBuffer;
 	VkPhysicalDevice physicalDevice;

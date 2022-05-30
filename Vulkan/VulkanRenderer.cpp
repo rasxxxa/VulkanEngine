@@ -18,7 +18,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
     
     
-    if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+    if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
     {
         std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
     }
@@ -186,17 +186,20 @@ void VulkanRenderer::CreateSwapChain()
     VkExtent2D extent = ChooseSwapExtent(details.surfaceCapabilities);
 
     // how many images are in swapchain. Get 1 more than minimum to allow tripple buffering
-    uint32_t imageCount = details.surfaceCapabilities.minImageCount;
+	uint32_t imageCount = details.surfaceCapabilities.minImageCount + 1;
 
-    // TODO: FIX
-    //if (details.surfaceCapabilities.maxImageCount > 0 && details.surfaceCapabilities.maxImageCount < imageCount)
-    //{
-    //    imageCount = details.surfaceCapabilities.minImageCount;
-    //}
+	// If imageCount higher than max, then clamp down to max
+	// If 0, then limitless
+	if (details.surfaceCapabilities.maxImageCount > 0
+		&& details.surfaceCapabilities.maxImageCount < imageCount)
+	{
+		imageCount = details.surfaceCapabilities.maxImageCount;
+	}
 
     // Creation information for swap chain
     VkSwapchainCreateInfoKHR swapChainCreateInfo = {};
     swapChainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+    swapChainCreateInfo.surface = surface;														// Swapchain surface
     swapChainCreateInfo.imageFormat = surfaceFormat.format;
     swapChainCreateInfo.imageColorSpace = surfaceFormat.colorSpace;
     swapChainCreateInfo.presentMode = presentMode;
@@ -234,7 +237,6 @@ void VulkanRenderer::CreateSwapChain()
     }
     // if old swap chain been destroyed and this one replaces it
     swapChainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
-    swapChainCreateInfo.surface = surface;
 
     // Create swap chain
     VkResult result = vkCreateSwapchainKHR(mainDevice.logicalDevice, &swapChainCreateInfo, nullptr, &swapchain);
@@ -513,7 +515,7 @@ void VulkanRenderer::GetPhysicalDevice()
 void VulkanRenderer::AllocateDynamicBuffer()
 {
     // Calculate alignment of model data
-    modelUniformAlignment =/* (sizeof(ViewProjection) + minUniformBUfferOffset - 1) & ~(minUniformBUfferOffset - 1)*/ 64;
+    modelUniformAlignment = (sizeof(UniformBufferObjectModel) + minUniformBUfferOffset - 1) & ~(minUniformBUfferOffset - 1);
 
     // Create space in memory to hold dynamic buffer that is aligned to our requred alignment and holds max_objects
     modelTransferSpace = (UniformBufferObjectModel*)_aligned_malloc(modelUniformAlignment * MAX_OBJECTS, modelUniformAlignment);
@@ -698,7 +700,7 @@ void VulkanRenderer::RecordCommands()
     // Information about how to begin each command buffer
     VkCommandBufferBeginInfo bufferBeginInfo = {};
     bufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    bufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT; // Buffer can be resubmitted when it has already been submited and waiting execution
+   // bufferBeginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT; // Buffer can be resubmitted when it has already been submited and waiting execution
     
     // Information about how to begin a render pass (only needed for graphical aplication)
 
@@ -709,7 +711,7 @@ void VulkanRenderer::RecordCommands()
     renderpassBeginInfo.renderArea.extent = swapChainExtent;             // size of region to run render pass on (starting at offset)
     VkClearValue clearValues[] =
     {
-        {0.0f, 0.0f, 0.0f, 1.0f}
+        {.9f, 0.7f, 0.8f, 1.0f}
     };
 
     renderpassBeginInfo.pClearValues = clearValues;                     // list of clear values (TODO: depth attachment clear value)
@@ -1237,7 +1239,7 @@ void VulkanRenderer::CreateUniformBuffers()
         CreateBuffer(mainDevice.physicalDevice, mainDevice.logicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &uniformBuffer[i], &uniformBufferMemory[i]);
 
-        CreateBuffer(mainDevice.physicalDevice, mainDevice.logicalDevice, bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+        CreateBuffer(mainDevice.physicalDevice, mainDevice.logicalDevice, modelBufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &modelUniformBuffer[i], &modelUniformBufferMemory[i]);
 
     }
@@ -1347,7 +1349,7 @@ void VulkanRenderer::UpdateUniformBuffer(uint32_t imageIndex)
 
     for (size_t i = 0; i < meshList.size(); i++)
     {
-        UniformBufferObjectModel* thisModel = (UniformBufferObjectModel*)((uint64_t)modelTransferSpace) + (i * modelUniformAlignment);
+        UniformBufferObjectModel* thisModel = (UniformBufferObjectModel*)((uint64_t)modelTransferSpace + (i * modelUniformAlignment));
         *thisModel = meshList[i].GetModel();
     }
 
@@ -1385,22 +1387,19 @@ int VulkanRenderer::Init(GLFWwindow* newWindow)
         modelviewprojection.m_projection[1][1] *= -1;
 
         // Vertex data
-        std::vector<Vertex> meshVertices =
-        {
-            {{-0.1, -0.4, 0.0}, {1.0f, 0.0f, 0.0f}}, // 0
-            {{-0.1, 0.4, 0.0}, {0.0f, 1.0f, 0.0f}},  // 1
-            {{-0.9, 0.4, 0.0}, {0.0f, 0.0f, 1.0f}}, // 2
-            {{-0.9, -0.4, 0.0}, {1.0f, 1.0f, 0.0f}},// 3
-        };
+		std::vector<Vertex> meshVertices = {
+			{ { -0.4, 0.4, 0.0 },{ 1.0f, 0.0f, 0.0f } },	// 0
+			{ { -0.4, -0.4, 0.0 },{ 0.0f, 1.0f, 0.0f } },	    // 1
+			{ { 0.4, -0.4, 0.0 },{ 0.0f, 0.0f, 1.0f } },    // 2
+			{ { 0.4, 0.4, 0.0 },{ 1.0f, 1.0f, 0.0f } },   // 3
+		};
 
-        // Vertex data
-        std::vector<Vertex> meshVertices2 =
-        {
-            {{0.9, -0.4, 0.0}, {1.0f, 0.0f, 0.0f}}, // 0
-            {{0.9, 0.4, 0.0}, {0.0f, 1.0f, 0.0f}},  // 1
-            {{0.1, 0.4, 0.0}, {0.0f, 0.0f, 1.0f}}, // 2
-            {{0.1, -0.4, 0.0}, {1.0f, 1.0f, 0.0f}},// 3
-        };
+		std::vector<Vertex> meshVertices2 = {
+			{ { -0.25, 0.6, 0.0 },{ 1.0f, 0.0f, 0.0f } },	// 0
+			{ { -0.25, -0.6, 0.0 },{ 0.0f, 1.0f, 0.0f } },	    // 1
+			{ { 0.25, -0.6, 0.0 },{ 0.0f, 0.0f, 1.0f } },    // 2
+			{ { 0.25, 0.6, 0.0 },{ 1.0f, 1.0f, 0.0f } },   // 3
+		};
 
         // Index data
 

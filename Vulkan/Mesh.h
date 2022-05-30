@@ -6,7 +6,7 @@
 #include <vector>
 #include "Utilites.h"
 
-struct UniformBufferObjectModel
+struct Model
 {
 	glm::mat4 m_model;
 };
@@ -26,11 +26,11 @@ public:
 	VkBuffer GetIndexBuffer() { return indexBuffer; };
 
 	void SetModel(glm::mat4 model) { this->model.m_model = model; };
-	UniformBufferObjectModel GetModel() { return model; };
+	Model& GetModel() { return model; };
 
 private:
 
-	UniformBufferObjectModel model;
+	Model model;
 
 	int vertexCount;
 	VkBuffer vertexBuffer;

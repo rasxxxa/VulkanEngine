@@ -31,8 +31,8 @@ private:
 	VkSurfaceKHR surface;
 	VkSwapchainKHR swapchain;
 
-	VkDeviceSize minUniformBUfferOffset;
-	size_t modelUniformAlignment;
+	//VkDeviceSize minUniformBUfferOffset;
+	//size_t modelUniformAlignment;
 
 	// Scene objects
 	std::vector<Mesh> meshList;
@@ -51,6 +51,7 @@ private:
 
 	// Descriptors
 	VkDescriptorSetLayout descriptorSetLayout;
+	VkPushConstantRange pushConstantRange;
 
 	VkDescriptorPool descriptorPool;
 	std::vector<VkDescriptorSet> descriptorSets;
@@ -61,7 +62,9 @@ private:
 	std::vector<VkBuffer> modelUniformBuffer;
 	std::vector<VkDeviceMemory> modelUniformBufferMemory;
 
-	UniformBufferObjectModel* modelTransferSpace;
+
+
+	//Model* modelTransferSpace;
 
 	// Utility
 	VkFormat swapChainImageFormat;
@@ -116,7 +119,7 @@ private:
 
 	// Record functions
 
-	void RecordCommands();
+	void RecordCommands(uint32_t currentImage);
 
 	//  Choose functions
 
@@ -131,6 +134,7 @@ private:
 	VkShaderModule CreateShaderModule(const std::vector<char>& code);
 	void CreateSynchronisation();
 	void CreateDescriptorSetLayout();
+	void CreatePushConstantRange();
 
 	void CreateUniformBuffers();
 	void CreateDescriptorPool();

@@ -36,7 +36,7 @@ void RunWindow()
 	{
 		glfwPollEvents();
 
-		float now = glfwGetTime();
+		float now = (float)glfwGetTime();
 		deltaTime = now - lastTime;
 		lastTime = now;
 
@@ -54,7 +54,7 @@ void RunWindow()
 		//secondModel = glm::rotate(secondModel, glm::radians(-angle * 100), glm::vec3(0.0f, 0.0f, 1.0f));
 
 		//renderer.UpdateModel(firstModel, 0);
-		//renderer.UpdateModel(secondModel, 1);
+	    //renderer.UpdateModel(secondModel, 1);
 
 		renderer.Draw();
 	}

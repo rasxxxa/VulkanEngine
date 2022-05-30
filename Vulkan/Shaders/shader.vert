@@ -9,15 +9,21 @@ layout(binding = 0) uniform ViewProjection
    mat4 view;
 } viewprojection;
 
+// NOT IN USE, LEFT FOR REFERENCE
 layout(binding = 1) uniform Model
 {
    mat4 model;
 } model;
 
+layout(push_constant) uniform PushModel
+{
+  mat4 model;
+} pushModel;
+
 layout(location = 0) out vec3 fragCol;
 
 void main()
 {
-    gl_Position = viewprojection.projection * viewprojection.view * model.model * vec4(pos, 1.0);
+    gl_Position = viewprojection.projection * viewprojection.view * pushModel.model * vec4(pos, 1.0);
 	fragCol = col;
 }

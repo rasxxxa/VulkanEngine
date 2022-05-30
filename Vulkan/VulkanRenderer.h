@@ -49,6 +49,12 @@ private:
 	std::vector<VkFramebuffer> swapChainFrameBuffers;
 	std::vector<VkCommandBuffer> commandBuffers;
 
+
+	VkImage depthBufferImage;
+	VkDeviceMemory depthBufferImageMemory;
+	VkImageView depthBufferImageView;
+	VkFormat depthFormat;
+
 	// Descriptors
 	VkDescriptorSetLayout descriptorSetLayout;
 	VkPushConstantRange pushConstantRange;
@@ -92,6 +98,8 @@ private:
 
 	void CreateSwapChain();
 
+	void CreateDepthBufferImage();
+
 	void CreateFramebuffers();
 
 	void CreateCommandPool();
@@ -99,6 +107,7 @@ private:
 	void CreateCommandBuffers();
 
 	// Support functions
+	VkFormat ChooseSupportedFormat(const std::vector<VkFormat>& formats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags);
 	bool CheckInstanceExtensionSupport(std::vector<const char*>* checkExtensions);
 
 	bool CheckValidationLayerSupport();
@@ -128,6 +137,7 @@ private:
 	VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& surfaceCapabilities);
     
 	// Create functions
+	VkImage CreateImage(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlags useFlags, VkMemoryPropertyFlags propertyFlags, VkDeviceMemory* imageMemory);
 	VkImageView CreateImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags);
 	void CreateRenderPass();
 	void CreateGraphicsPipeline();

@@ -599,6 +599,14 @@ void VulkanRenderer::CleanUp()
     // Wait untill no action is run on device
     vkDeviceWaitIdle(mainDevice.logicalDevice);
 
+
+    for (size_t i = 0; i < textureImages.size(); i++)
+    {
+        vkDestroyImage(mainDevice.logicalDevice, textureImages[i], nullptr);
+        vkFreeMemory(mainDevice.logicalDevice, textureImageMemory[i], nullptr);
+    }
+
+
     vkDestroyImageView(mainDevice.logicalDevice, depthBufferImageView, nullptr);
     vkDestroyImage(mainDevice.logicalDevice, depthBufferImage, nullptr);
     vkFreeMemory(mainDevice.logicalDevice, depthBufferImageMemory, nullptr);
@@ -1482,6 +1490,55 @@ void VulkanRenderer::CreateDescriptorSets()
 
 }
 
+int VulkanRenderer::CreateTexture(std::string fileName)
+{
+    int width, height;
+    VkDeviceSize imageSize;
+    auto imageData = LoadTextureFile(fileName, &width, &height, &imageSize);
+
+    // Creating staging buffer to hold loaded data
+    VkBuffer imageStagingBuffer;
+    VkDeviceMemory imageStagingBufferMemory;
+    CreateBuffer(mainDevice.physicalDevice, mainDevice.logicalDevice, imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, &imageStagingBuffer, &imageStagingBufferMemory);
+
+    // Copy image data to staging buffer
+    void* data;
+    vkMapMemory(mainDevice.logicalDevice, imageStagingBufferMemory, 0, imageSize, 0, &data);
+    memcpy(data, imageData, static_cast<size_t>(imageSize));
+    vkUnmapMemory(mainDevice.logicalDevice, imageStagingBufferMemory);
+
+    // Free original data
+    stbi_image_free(imageData);
+
+    // Create image to hold final texture
+    VkImage texImage;
+    VkDeviceMemory texImageMemory;
+
+    texImage = CreateImage(width, height, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &texImageMemory);
+
+    // Trainsition image to be dst for copy operation
+    TransitionImageLayout(mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, texImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+    // copy image to data
+    CopyImageBuffer(mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, imageStagingBuffer, texImage, width, height);
+
+    // Trasnition image to be shader readable
+    TransitionImageLayout(mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, texImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+
+    // Add texture data to vector for reference
+    textureImages.push_back(texImage);
+    textureImageMemory.push_back(texImageMemory);
+
+    // Destroy stagin buffers
+    vkDestroyBuffer(mainDevice.logicalDevice, imageStagingBuffer, nullptr);
+    vkFreeMemory(mainDevice.logicalDevice, imageStagingBufferMemory, nullptr);
+
+    // Return index of new texture image
+    return textureImages.size() - 1;
+}
+
 void VulkanRenderer::UpdateUniformBuffer(uint32_t imageIndex)
 {
     void* data;
@@ -1499,6 +1556,26 @@ void VulkanRenderer::UpdateUniformBuffer(uint32_t imageIndex)
     //memcpy(data, modelTransferSpace, modelUniformAlignment * meshList.size());
     //vkUnmapMemory(mainDevice.logicalDevice, modelUniformBufferMemory[imageIndex]);
 
+}
+
+stbi_uc* VulkanRenderer::LoadTextureFile(std::string fileName, int* width, int* height, VkDeviceSize* imageSize)
+{
+    // Number of channels image uses
+    int channels;
+
+    // load pixel data for image
+    std::string fileLoc = "Textures/" + fileName;
+    stbi_uc* image = stbi_load(fileLoc.c_str(), width, height, &channels, STBI_rgb_alpha);
+
+    if (!image)
+    {
+        throw std::runtime_error("Failed to load an image: " + fileName);
+    }
+
+
+    *imageSize = static_cast<long>(*width) * static_cast<long>(*height) * 4;
+
+    return image;
 }
 
 VulkanRenderer::VulkanRenderer()
@@ -1523,6 +1600,15 @@ int VulkanRenderer::Init(GLFWwindow* newWindow)
         GetPhysicalDevice();
         CreateLogicalDevice();
         CreateSwapChain();
+        CreateRenderPass();
+        CreateDescriptorSetLayout();
+        CreatePushConstantRange();
+        CreateGraphicsPipeline();
+        CreateDepthBufferImage();
+        CreateFramebuffers();
+        CreateCommandPool();
+        int firstTexture = CreateTexture("emoji.png");
+
         modelviewprojection.m_projection = glm::perspective(glm::radians(45.0f), (float)swapChainExtent.width / (float)swapChainExtent.height, 0.1f, 100.0f);
         modelviewprojection.m_view = glm::lookAt(glm::vec3(0.0f, 0.0f, 2.f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -1549,14 +1635,6 @@ int VulkanRenderer::Init(GLFWwindow* newWindow)
             0, 1, 2,
             2, 3, 0
         };
-
-        CreateRenderPass();
-        CreateDescriptorSetLayout();
-        CreatePushConstantRange();
-        CreateGraphicsPipeline();
-        CreateDepthBufferImage();
-        CreateFramebuffers();
-        CreateCommandPool();
         Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &meshIndices);
         Mesh firstMesh2 = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices2, &meshIndices);
 

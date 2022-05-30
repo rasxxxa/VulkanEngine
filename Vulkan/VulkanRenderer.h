@@ -9,6 +9,7 @@
 #include <vector>
 #include <algorithm>
 #include <array>
+#include "stb_image.h"
 
 #include <iostream>
 #include <set>
@@ -150,7 +151,13 @@ private:
 	void CreateDescriptorPool();
 	void CreateDescriptorSets();
 
+	int CreateTexture(std::string fileName);
+
 	void UpdateUniformBuffer(uint32_t imageIndex);
+
+	// Assets
+	std::vector<VkImage> textureImages;
+	std::vector<VkDeviceMemory> textureImageMemory;
 
 	// PIPELINE
 	VkPipelineLayout pipelineLayout;
@@ -159,7 +166,10 @@ private:
 	std::vector<VkSemaphore> imageAvailable;
 	std::vector<VkSemaphore> renderFinished;
 	std::vector<VkFence> drawFences;
-	
+
+	// Loader function
+	stbi_uc* LoadTextureFile(std::string fileName, int* width, int* height, VkDeviceSize* imageSize);
+
 public:
 	VulkanRenderer();
 	virtual ~VulkanRenderer();

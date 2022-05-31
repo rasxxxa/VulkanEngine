@@ -1779,7 +1779,7 @@ int VulkanRenderer::Init(GLFWwindow* newWindow)
         };
         int texId = CreateTexture("emoji.png");
         Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &meshIndices, texId);
-        Mesh firstMesh2 = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices2, &meshIndices, 2);
+        Mesh firstMesh2 = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices2, &meshIndices, texId);
 
         meshList.push_back(firstMesh);
         meshList.push_back(firstMesh2);

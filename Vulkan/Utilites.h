@@ -76,6 +76,7 @@ struct Vertex
 {
 	glm::vec3 m_position;
 	glm::vec3 m_color;
+	glm::vec2 m_tex; // texture coords 
 };
 
 

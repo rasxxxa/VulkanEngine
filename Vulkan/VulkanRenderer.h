@@ -58,10 +58,13 @@ private:
 
 	// Descriptors
 	VkDescriptorSetLayout descriptorSetLayout;
+	VkDescriptorSetLayout samplerSetLayout;
 	VkPushConstantRange pushConstantRange;
 
 	VkDescriptorPool descriptorPool;
+	VkDescriptorPool samplerDescriptorPool;
 	std::vector<VkDescriptorSet> descriptorSets;
+	std::vector<VkDescriptorSet> samplerDescriptorSets;
 
 	std::vector<VkBuffer> uniformBuffer;
 	std::vector<VkDeviceMemory> uniformBufferMemory;
@@ -153,11 +156,14 @@ private:
 
 	int CreateTextureImage(std::string fileName);
 	int CreateTexture(std::string fileName);
+	void CreateTextureSampler();
+	int CreateTextureDescriptor(VkImageView textureImage);
 
 
 	void UpdateUniformBuffer(uint32_t imageIndex);
 
 	// Assets
+	VkSampler sampler;
 	std::vector<VkImage> textureImages;
 	std::vector<VkDeviceMemory> textureImageMemory;
 	std::vector<VkImageView> textureImageViews;

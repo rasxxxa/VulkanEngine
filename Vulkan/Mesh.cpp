@@ -1,7 +1,7 @@
 #include "Mesh.h"
 #include <thread>
 
-Mesh::Mesh(VkPhysicalDevice device, VkDevice newDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices)
+Mesh::Mesh(VkPhysicalDevice device, VkDevice newDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, int texId)
 {
 	indexCount = indices->size();
 	vertexCount = vertices->size();
@@ -11,6 +11,7 @@ Mesh::Mesh(VkPhysicalDevice device, VkDevice newDevice, VkQueue transferQueue, V
 	CreateIndexBuffer(transferQueue, transferCommandPool, indices);
 	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	model.m_model = glm::mat4(1.0f);
+	textureId = texId;
 }
 
 int Mesh::GetVertexCount()

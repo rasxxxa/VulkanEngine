@@ -14,7 +14,7 @@ struct Model
 class Mesh
 {
 public:
-	Mesh(VkPhysicalDevice device, VkDevice newDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex> * vertices, std::vector<uint32_t>* indices);
+	Mesh(VkPhysicalDevice device, VkDevice newDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex> * vertices, std::vector<uint32_t>* indices, int texId);
 	Mesh() {};
 	~Mesh() {};
 	int GetVertexCount();
@@ -27,11 +27,11 @@ public:
 
 	void SetModel(glm::mat4 model) { this->model.m_model = model; };
 	Model& GetModel() { return model; };
+	inline int GetTexId() const { return textureId; }
 
 private:
-
 	Model model;
-
+	int textureId;
 	int vertexCount;
 	VkBuffer vertexBuffer;
 	VkPhysicalDevice physicalDevice;

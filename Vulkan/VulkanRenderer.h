@@ -151,13 +151,16 @@ private:
 	void CreateDescriptorPool();
 	void CreateDescriptorSets();
 
+	int CreateTextureImage(std::string fileName);
 	int CreateTexture(std::string fileName);
+
 
 	void UpdateUniformBuffer(uint32_t imageIndex);
 
 	// Assets
 	std::vector<VkImage> textureImages;
 	std::vector<VkDeviceMemory> textureImageMemory;
+	std::vector<VkImageView> textureImageViews;
 
 	// PIPELINE
 	VkPipelineLayout pipelineLayout;

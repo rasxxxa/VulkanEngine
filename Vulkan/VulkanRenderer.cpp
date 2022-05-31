@@ -602,6 +602,7 @@ void VulkanRenderer::CleanUp()
 
     for (size_t i = 0; i < textureImages.size(); i++)
     {
+        vkDestroyImageView(mainDevice.logicalDevice, textureImageViews[i], nullptr);
         vkDestroyImage(mainDevice.logicalDevice, textureImages[i], nullptr);
         vkFreeMemory(mainDevice.logicalDevice, textureImageMemory[i], nullptr);
     }
@@ -1490,7 +1491,7 @@ void VulkanRenderer::CreateDescriptorSets()
 
 }
 
-int VulkanRenderer::CreateTexture(std::string fileName)
+int VulkanRenderer::CreateTextureImage(std::string fileName)
 {
     int width, height;
     VkDeviceSize imageSize;
@@ -1537,6 +1538,19 @@ int VulkanRenderer::CreateTexture(std::string fileName)
 
     // Return index of new texture image
     return textureImages.size() - 1;
+}
+
+int VulkanRenderer::CreateTexture(std::string fileName)
+{
+    // Create TextureImage and get its location in array
+    int textureImageLoc = CreateTextureImage(fileName);
+
+    VkImageView imageView = CreateImageView(textureImages[textureImageLoc], VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_ASPECT_COLOR_BIT);
+    textureImageViews.push_back(imageView);
+
+    // TODO: Create descriptor set here
+
+    return 0;
 }
 
 void VulkanRenderer::UpdateUniformBuffer(uint32_t imageIndex)

@@ -1,7 +1,7 @@
 #include "Mesh.h"
 #include <thread>
 
-Mesh::Mesh(VkPhysicalDevice device, VkDevice newDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, int texId)
+Mesh::Mesh(VkPhysicalDevice device, VkDevice newDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, int texId = -1)
 {
 	indexCount = indices->size();
 	vertexCount = vertices->size();

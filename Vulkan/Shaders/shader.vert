@@ -3,6 +3,7 @@
 layout(location = 0) in vec3 pos;
 layout(location = 1) in vec3 col;
 layout(location = 2) in vec2 tex;
+layout(location = 3) in float bTex;
 
 layout(set = 0, binding = 0) uniform ViewProjection
 {
@@ -23,9 +24,11 @@ layout(push_constant) uniform PushModel
 
 layout(location = 0) out vec3 fragCol;
 layout(location = 1) out vec2 fragTex;
+layout(location = 2) out float hasTex;
 void main()
 {
     gl_Position = viewprojection.projection * viewprojection.view * pushModel.model * vec4(pos, 1.0);
 	fragCol = col;
 	fragTex = tex;
+	hasTex = bTex;
 }

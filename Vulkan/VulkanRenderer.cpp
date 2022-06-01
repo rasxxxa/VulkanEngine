@@ -815,11 +815,20 @@ void VulkanRenderer::RecordCommands(uint32_t currentImage)
             sizeof(Model),
             (&meshList[j].GetModel()));
 
-        std::array<VkDescriptorSet, 2> descriptorSetGroup = { descriptorSets[currentImage], samplerDescriptorSets[meshList[j].GetTexId()] };
+
 
         // Bind descriptor sets
-        vkCmdBindDescriptorSets(commandBuffers[currentImage], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
-            0, static_cast<uint32_t>(descriptorSetGroup.size()), descriptorSetGroup.data(), 0, nullptr);
+        if (meshList[j].GetTexId() == -1)
+        {
+            vkCmdBindDescriptorSets(commandBuffers[currentImage], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
+                0, 1, &descriptorSets[currentImage], 0, nullptr);
+        }
+        else
+        {
+            std::array<VkDescriptorSet, 2> descriptorSetGroup = { descriptorSets[currentImage], samplerDescriptorSets[meshList[j].GetTexId()] };
+            vkCmdBindDescriptorSets(commandBuffers[currentImage], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
+                0, static_cast<uint32_t>(descriptorSetGroup.size()), descriptorSetGroup.data(), 0, nullptr);
+        }
 
         // execute pipeline
         vkCmdDrawIndexed(commandBuffers[currentImage], meshList[j].GetIndexCount(), 1, 0, 0, 0);
@@ -1120,7 +1129,7 @@ void VulkanRenderer::CreateGraphicsPipeline()
 
 
     // How the data for an attribute is defined within a vertex
-    std::array<VkVertexInputAttributeDescription, 3> attributeDescription;
+    std::array<VkVertexInputAttributeDescription, 4> attributeDescription;
 
     attributeDescription[0].binding = 0;  // Which binding the data is at (should be same as above)
     attributeDescription[0].location = 0; // Location in shader where data will be read from
@@ -1139,6 +1148,12 @@ void VulkanRenderer::CreateGraphicsPipeline()
     attributeDescription[2].location = 2;
     attributeDescription[2].format = VK_FORMAT_R32G32_SFLOAT;
     attributeDescription[2].offset = offsetof(Vertex, m_tex);
+
+    // Texture attribtue
+    attributeDescription[3].binding = 0;
+    attributeDescription[3].location = 3;
+    attributeDescription[3].format = VK_FORMAT_R32_SFLOAT;
+    attributeDescription[3].offset = offsetof(Vertex, hasTexture);
 
     // VERTEX INPUT 
     VkPipelineVertexInputStateCreateInfo vertexStateCreateInfo = {};
@@ -1758,17 +1773,17 @@ int VulkanRenderer::Init(GLFWwindow* newWindow)
 
         // Vertex data
         std::vector<Vertex> meshVertices = {
-            { { -0.4, 0.4, 0.0 },{ 1.0f, 0.0f, 0.0f } , {1.0f, 1.0f}},	// 0
-            { { -0.4, -0.4, 0.0 },{ 1.0f, 0.0f, 0.0f }, {1.0f, 0.0f}},	    // 1
-            { { 0.4, -0.4, 0.0 },{ 1.0f, 0.0f, 0.0f } ,{0.0f, 0.0f}},    // 2
-            { { 0.4, 0.4, 0.0 },{ 1.0f, 0.0f, 0.0f }  ,{0.0f, 1.0f}},   // 3
+            { { -0.4, 0.4, 0.0 },{ 1.0f, 0.0f, 0.0f } , {1.0f, 1.0f}, 1.0f},	// 0
+            { { -0.4, -0.4, 0.0 },{ 1.0f, 0.0f, 0.0f }, {1.0f, 0.0f}, 1.0f},	    // 1
+            { { 0.4, -0.4, 0.0 },{ 1.0f, 0.0f, 0.0f } ,{0.0f, 0.0f}, 1.0f},    // 2
+            { { 0.4, 0.4, 0.0 },{ 1.0f, 0.0f, 0.0f }  ,{0.0f, 1.0f}, 1.0f},   // 3
         };
 
         std::vector<Vertex> meshVertices2 = {
-            { { -0.25, 0.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {1.0f, 1.0f}},	// 0
-            { { -0.25, -1.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {1.0f, 0.0f}},	    // 1
-            { { 0.25, -1.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {0.0f, 0.0f} },    // 2
-            { { 0.25, 0.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {0.0f, 1.0f}},   // 3
+            { { -0.25, 0.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {1.0f, 1.0f}, 0.0f},	// 0
+            { { -0.25, -1.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {1.0f, 0.0f}, 0.0f},	    // 1
+            { { 0.25, -1.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {0.0f, 0.0f}, 0.0f },    // 2
+            { { 0.25, 0.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {0.0f, 1.0f}, 0.0f  },   // 3
         };
         // Index data
 
@@ -1779,7 +1794,7 @@ int VulkanRenderer::Init(GLFWwindow* newWindow)
         };
         int texId = CreateTexture("emoji.png");
         Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &meshIndices, texId);
-        Mesh firstMesh2 = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices2, &meshIndices, texId);
+        Mesh firstMesh2 = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices2, &meshIndices, -1);
 
         meshList.push_back(firstMesh);
         meshList.push_back(firstMesh2);

@@ -16,10 +16,17 @@
 #include "Utilites.h"
 #include "Mesh.h"
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_vulkan.h"
 
 class VulkanRenderer
 {
 private:
+
+	// IMGUI
+	ImGui_ImplVulkanH_Window* imgWindow;
+
 	// Main
 	struct
 	{
@@ -179,13 +186,17 @@ private:
 	// Loader function
 	stbi_uc* LoadTextureFile(std::string fileName, int* width, int* height, VkDeviceSize* imageSize);
 
+
 public:
 	VulkanRenderer();
 	virtual ~VulkanRenderer();
-	int Init(GLFWwindow* newWindow);
+	int Init(ImGui_ImplVulkanH_Window* wd, GLFWwindow* newWindow);
 	void CleanUp();
 	void UpdateModel(glm::mat4 newModel, int modelId);
 	void Draw();
-
+	void CreateImgGui();
+	void ImgVulkanInitInfo(ImGui_ImplVulkan_InitInfo& init_info);
+	VkDevice GetLogicalDevice() { return mainDevice.logicalDevice; };
+	VkPhysicalDevice GetPhysicalDeviceM() { return mainDevice.physicalDevice; };
 };
 

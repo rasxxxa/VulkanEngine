@@ -354,6 +354,53 @@ void VulkanRenderer::CreateCommandBuffers()
     }
 }
 
+void VulkanRenderer::CreateImgGui()
+{
+
+    const VkFormat requestSurfaceImageFormat[] = { VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8_UNORM, VK_FORMAT_R8G8B8_UNORM };
+    const VkColorSpaceKHR requestSurfaceColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
+
+    imgWindow->Surface = surface;
+    imgWindow->SurfaceFormat = ImGui_ImplVulkanH_SelectSurfaceFormat(mainDevice.physicalDevice, imgWindow->Surface, requestSurfaceImageFormat, (size_t)IM_ARRAYSIZE(requestSurfaceImageFormat), requestSurfaceColorSpace);
+    VkPresentModeKHR present_modes[] = { VK_PRESENT_MODE_FIFO_KHR };
+    imgWindow->PresentMode = ImGui_ImplVulkanH_SelectPresentMode(mainDevice.physicalDevice, imgWindow->Surface, &present_modes[0], IM_ARRAYSIZE(present_modes));
+    //printf("[vulkan] Selected PresentMode = %d\n", wd->PresentMode);
+
+    // Create SwapChain, RenderPass, Framebuffer, etc.
+    //IM_ASSERT(g_MinImageCount >= 2);
+    imgWindow->Swapchain = swapchain;
+    ImGui_ImplVulkanH_CreateOrResizeWindow(instance, mainDevice.physicalDevice, mainDevice.logicalDevice, imgWindow, 0, nullptr, swapChainExtent.width, swapChainExtent.height, 2);
+}
+
+void VulkanRenderer::ImgVulkanInitInfo(ImGui_ImplVulkan_InitInfo& init_info)
+{
+    uint32_t count, g_QueueFamily = (uint32_t)-1;
+    vkGetPhysicalDeviceQueueFamilyProperties(mainDevice.physicalDevice, &count, NULL);
+    VkQueueFamilyProperties* queues = (VkQueueFamilyProperties*)malloc(sizeof(VkQueueFamilyProperties) * count);
+    vkGetPhysicalDeviceQueueFamilyProperties(mainDevice.physicalDevice, &count, queues);
+    for (uint32_t i = 0; i < count; i++)
+        if (queues[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
+        {
+            g_QueueFamily = i;
+            break;
+        }
+    VkQueue g_Queue;
+    vkGetDeviceQueue(mainDevice.logicalDevice, g_QueueFamily, 0, &g_Queue);
+    init_info.Instance = instance;
+    init_info.PhysicalDevice = mainDevice.physicalDevice;
+    init_info.Device = mainDevice.logicalDevice;
+    init_info.QueueFamily = g_QueueFamily;
+    init_info.Queue = presentationQueue;
+    init_info.PipelineCache = VK_NULL_HANDLE;
+    init_info.DescriptorPool = descriptorPool;
+    init_info.Subpass = 0;
+    init_info.MinImageCount = 2;
+    init_info.ImageCount = imgWindow->ImageCount;
+    init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    init_info.Allocator = nullptr;
+    ImGui_ImplVulkan_Init(&init_info, imgWindow->RenderPass);
+}
+
 void VulkanRenderer::Draw()
 {
 
@@ -1739,10 +1786,10 @@ VulkanRenderer::~VulkanRenderer()
 
 }
 
-int VulkanRenderer::Init(GLFWwindow* newWindow)
+int VulkanRenderer::Init(ImGui_ImplVulkanH_Window* wd, GLFWwindow* newWindow)
 {
     window = newWindow;
-
+    imgWindow = wd;
     try
     {
         CreateInstance();
@@ -1760,6 +1807,7 @@ int VulkanRenderer::Init(GLFWwindow* newWindow)
         CreateCommandPool();
         CreateTextureSampler();
         CreateCommandBuffers();
+        CreateImgGui();
     //    AllocateDynamicBuffer();
         CreateUniformBuffers();
         CreateDescriptorPool();

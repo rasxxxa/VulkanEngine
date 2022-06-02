@@ -186,6 +186,6 @@ public:
 	void CleanUp();
 	void UpdateModel(glm::mat4 newModel, int modelId);
 	void Draw();
-
+	inline std::vector<Mesh>& ReturnSceneObject() { return meshList; }
 };
 

@@ -537,7 +537,7 @@ void RunWindow()
             static std::vector<float> sizes(size, 0);
             static std::vector<std::array<float, 3>> poses(size, { 0.0f, 0.0f, 0.0f });
 
-            for (int i = 0; i < size; i++)
+            for (size_t i = 0; i < size; i++)
             {
                 ImGui::SliderFloat("rotation" + i, &sizes[i], 0.0f, 360.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
                 glm::mat4 firstModel(1.0f);

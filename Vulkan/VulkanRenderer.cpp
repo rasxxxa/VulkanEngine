@@ -592,7 +592,7 @@ bool VulkanRenderer::CheckDeviceSuitable(VkPhysicalDevice device)
         swapChainVaild = !details.presentationModes.empty() && !details.formats.empty();
     }
 
-    return indices.isValid() && extensionsSupported && swapChainVaild && deviceFeatures.samplerAnisotropy;
+    return indices.isValid() && extensionsSupported && swapChainVaild && deviceFeatures.samplerAnisotropy && deviceProperties.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
 }
 
 void VulkanRenderer::CleanUp()

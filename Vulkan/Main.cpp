@@ -547,18 +547,26 @@ void RunWindow()
 
             for (size_t i = 0; i < size; i++)
             {
-                std::string r = "rotation";
-                r += std::to_string(i);
-                ImGui::SliderFloat(r.c_str(), &sizes[i], 0.0f, 360.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-                glm::mat4 firstModel(1.0f);
-                firstModel = glm::rotate(firstModel, glm::radians(sizes[i]), glm::vec3(0.0f, 0.0f, 1.0f));
+                std::string itemMenu = "item Menu";
+                itemMenu += std::to_string(i);
+                if (ImGui::BeginMenu(itemMenu.c_str()))
+                {
+                    std::string r = "rotation";
+                    r += std::to_string(i);
+                    ImGui::SliderFloat(r.c_str(), &sizes[i], 0.0f, 360.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+                    glm::mat4 firstModel(1.0f);
+                    firstModel = glm::rotate(firstModel, glm::radians(sizes[i]), glm::vec3(0.0f, 0.0f, 1.0f));
 
 
-                ImGui::SliderFloat("translationX " + i, &poses[i][0], -2.0f, 2.0f);
-                ImGui::SliderFloat("translationY " + i, &poses[i][1], -2.0f, 2.0f);
-                ImGui::SliderFloat("translationZ " + i, &poses[i][2], -2.0f, 2.0f);
-                firstModel = glm::translate(firstModel, glm::vec3(poses[i][0], poses[i][1], poses[i][2]));
-                renderer.ReturnSceneObject()[i].SetModel(firstModel);
+                    ImGui::SliderFloat("translationX " + i, &poses[i][0], -2.0f, 2.0f);
+                    ImGui::SliderFloat("translationY " + i, &poses[i][1], -2.0f, 2.0f);
+                    ImGui::SliderFloat("translationZ " + i, &poses[i][2], -2.0f, 2.0f);
+                    ImGui::EndMenu();
+                    firstModel = glm::translate(firstModel, glm::vec3(poses[i][0], poses[i][1], poses[i][2]));
+                    renderer.ReturnSceneObject()[i].SetModel(firstModel);
+                }
+
+
 
             }
             if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)

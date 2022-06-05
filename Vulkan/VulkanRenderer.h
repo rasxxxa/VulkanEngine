@@ -9,6 +9,7 @@
 #include <vector>
 #include <algorithm>
 #include <array>
+#include <random>
 #include "stb_image.h"
 
 #include <iostream>
@@ -179,6 +180,9 @@ private:
 	// Loader function
 	stbi_uc* LoadTextureFile(std::string fileName, int* width, int* height, VkDeviceSize* imageSize);
 
+	std::mt19937 mt;
+	std::uniform_real_distribution<float> distribution;
+	std::uniform_real_distribution<float> colorDistribution;
 public:
 	VulkanRenderer();
 	virtual ~VulkanRenderer();
@@ -187,5 +191,6 @@ public:
 	void UpdateModel(glm::mat4 newModel, int modelId);
 	void Draw();
 	inline std::vector<Mesh>& ReturnSceneObject() { return meshList; }
+	void AddRandomMesh();
 };
 

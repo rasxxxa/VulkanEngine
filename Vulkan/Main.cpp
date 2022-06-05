@@ -14,6 +14,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
+#include <string>
 
 
 GLFWwindow* window;
@@ -537,9 +538,18 @@ void RunWindow()
             static std::vector<float> sizes(size, 0);
             static std::vector<std::array<float, 3>> poses(size, { 0.0f, 0.0f, 0.0f });
 
+            if (sizes.size() != size)
+            {
+                sizes.resize(size);
+                poses.resize(size);
+            }
+
+
             for (size_t i = 0; i < size; i++)
             {
-                ImGui::SliderFloat("rotation" + i, &sizes[i], 0.0f, 360.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+                std::string r = "rotation";
+                r += std::to_string(i);
+                ImGui::SliderFloat(r.c_str(), &sizes[i], 0.0f, 360.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
                 glm::mat4 firstModel(1.0f);
                 firstModel = glm::rotate(firstModel, glm::radians(sizes[i]), glm::vec3(0.0f, 0.0f, 1.0f));
 
@@ -551,11 +561,10 @@ void RunWindow()
                 renderer.ReturnSceneObject()[i].SetModel(firstModel);
 
             }
-
             if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
+                renderer.AddRandomMesh();
             ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+            ImGui::Text("counter = %d", renderer.ReturnSceneObject().size());
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();

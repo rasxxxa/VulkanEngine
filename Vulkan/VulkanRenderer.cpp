@@ -1,5 +1,7 @@
 #include "VulkanRenderer.h"
 
+#include <assert.h>
+
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
@@ -362,8 +364,21 @@ void VulkanRenderer::Draw()
 
     // -- Get Next image --
     // Get index of next image to be drawn to, and signal semaphore when ready to be drawn to
+    // If function returns VK_ERROR_OUT_OF_DATE_KRH we need to recreate swapchain
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(mainDevice.logicalDevice, swapchain, std::numeric_limits<uint64_t>::max(), imageAvailable[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    VkResult testResult = vkAcquireNextImageKHR(mainDevice.logicalDevice, swapchain, std::numeric_limits<uint64_t>::max(), imageAvailable[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+    switch (testResult)
+    {
+    case VK_SUBOPTIMAL_KHR:
+        std::cout << "Suboptimal_KRH";
+        break;
+    case VK_ERROR_OUT_OF_DATE_KHR:
+        assert(false);
+        break;
+    default:
+        break;
+    }
 
     RecordCommands(imageIndex);
 
@@ -407,6 +422,32 @@ void VulkanRenderer::Draw()
     }
 
     currentFrame = (currentFrame + 1) % MAX_FRAME_DRAWS;
+}
+
+void VulkanRenderer::AddRandomMesh()
+{
+    auto size = distribution(mt);
+    if (size < 1)
+        size = 1;
+
+    auto posX = distribution(mt);
+    auto posY = distribution(mt);
+    auto R = colorDistribution(mt);
+    auto G = colorDistribution(mt);
+    auto B = colorDistribution(mt);
+
+    std::vector<Vertex> meshVertices = 
+    {
+        { { posX, posY, 0.0 },{ R, G, B }, {1.0f, 1.0f}, 0.0f},	// 0
+        { { posX, posY - size, 0.0 },{ R, G, B }, {1.0f, 0.0f}, 0.0f},	    // 1
+        { { posX + size, posY - size, 0.0 },{ R, G, B }, {0.0f, 1.0f}, 0.0f },    // 2
+        { { posX + size, posY, 0.0 },{ R, G, B }, {0.0f, 1.0f}, 0.0f  },   // 3
+    };
+
+    // Index data
+    Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &MESH_INDICES, -1);
+
+    meshList.push_back(firstMesh);
 }
 
 VkFormat VulkanRenderer::ChooseSupportedFormat(const std::vector<VkFormat>& formats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags)
@@ -488,6 +529,8 @@ bool VulkanRenderer::CheckValidationLayerSupport()
 
     return true;
 }
+
+
 
 bool VulkanRenderer::CheckDeviceExtensionSupport(VkPhysicalDevice device)
 {
@@ -1731,7 +1774,10 @@ stbi_uc* VulkanRenderer::LoadTextureFile(std::string fileName, int* width, int* 
 
 VulkanRenderer::VulkanRenderer()
 {
-
+    std::random_device randomDevice;
+    mt = std::mt19937(randomDevice());
+    distribution = std::uniform_real_distribution<float>(-5.0f, 5.0f);
+    colorDistribution = std::uniform_real_distribution<float>(0.0f, 1.0f);
 }
 
 VulkanRenderer::~VulkanRenderer()
@@ -1780,21 +1826,17 @@ int VulkanRenderer::Init(GLFWwindow* newWindow)
         };
 
         std::vector<Vertex> meshVertices2 = {
-            { { -0.25, 0.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {1.0f, 1.0f}, 0.0f},	// 0
+            { { -0.55, 0.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {1.0f, 1.0f}, 0.0f},	// 0
             { { -0.25, -1.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {1.0f, 0.0f}, 0.0f},	    // 1
             { { 0.25, -1.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {0.0f, 0.0f}, 0.0f },    // 2
             { { 0.25, 0.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {0.0f, 1.0f}, 0.0f  },   // 3
         };
         // Index data
 
-        std::vector<uint32_t> meshIndices =
-        {
-            0, 1, 2,
-            2, 3, 0
-        };
+
         int texId = CreateTexture("emoji.png");
-        Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &meshIndices, texId);
-        Mesh firstMesh2 = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices2, &meshIndices, -1);
+        Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &MESH_INDICES, texId);
+        Mesh firstMesh2 = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices2, &MESH_INDICES, -1);
 
         meshList.push_back(firstMesh);
         meshList.push_back(firstMesh2);

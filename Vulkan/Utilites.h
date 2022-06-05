@@ -10,6 +10,12 @@ const int MAX_FRAME_DRAWS = 2;
 
 const size_t MAX_OBJECTS = 2;
 
+static std::vector<uint32_t> MESH_INDICES =
+{
+	0, 1, 2,
+	2, 3, 0
+};
+
 const std::vector<const char*> deviceExtensions =
 {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME

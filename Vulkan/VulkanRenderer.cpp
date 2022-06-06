@@ -444,17 +444,67 @@ void VulkanRenderer::AddRandomMesh()
 
         std::vector<Vertex> meshVertices =
                 {
-                        { { posX, posY, 0.0 },{ R, G, B }, {1.0f, 1.0f}, 0.0f},	// 0
-                        { { posX, posY - size, 0.0 },{ R, G, B }, {1.0f, 0.0f}, 0.0f},	    // 1
-                        { { posX + size, posY - size, 0.0 },{ R, G, B }, {0.0f, 1.0f}, 0.0f },    // 2
-                        { { posX + size, posY, 0.0 },{ R, G, B }, {0.0f, 1.0f}, 0.0f  },   // 3
+                        { { posX, posY, 0.0 },{ R, G, B }, {1.0f, 1.0f}, 1.0f},	// 0
+                        { { posX, posY - size, 0.0 },{ R, G, B }, {1.0f, 0.0f}, 1.0f},	    // 1
+                        { { posX + size, posY - size, 0.0 },{ R, G, B }, {0.0f, 1.0f}, 1.0f },    // 2
+                        { { posX + size, posY, 0.0 },{ R, G, B }, {0.0f, 1.0f}, 1.0f  },   // 3
                 };
 
         // Index data
-        Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &MESH_INDICES, -1);
+        Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &MESH_INDICES, 0);
 
         meshList.push_back(firstMesh);
     }
+}
+
+void VulkanRenderer::SetupImgui(ImGui_ImplVulkanH_Window* window)
+{
+    this->wd = window;
+    wd->ImageCount = swapChainImages.size();
+    wd->RenderPass = renderPass;
+    wd->Surface = surface;
+    SwapChainDetails details = GetSwapChainDetails(mainDevice.physicalDevice);
+
+    // 1. Choose best surface format
+    // 2. Choose best presentation mode
+    // 3. Choose swap chain image resolution
+    VkSurfaceFormatKHR surfaceFormat = ChooseBestSurfaceFormat(details.formats);
+    wd->SurfaceFormat = surfaceFormat;
+    wd->Swapchain = swapchain;
+    wd->Height = swapChainExtent.height;
+    wd->Width = swapChainExtent.width;
+    wd->Pipeline = graphicsPipeline;
+
+    VkPresentModeKHR presentMode = ChooseBestPresentationMode(details.presentationModes);
+    VkExtent2D extent = ChooseSwapExtent(details.surfaceCapabilities);
+    wd->PresentMode = presentMode;
+    wd->Frames = new ImGui_ImplVulkanH_Frame[swapChainImages.size()];
+    for (int i = 0; i < swapChainImages.size(); i++)
+    {
+        wd->Frames[i].CommandBuffer = commandBuffers[i];
+        wd->Frames[i].CommandPool = graphicsCommandPool;
+        wd->Frames[i].Framebuffer = swapChainFrameBuffers[i];
+    }
+}
+
+void VulkanRenderer::InitForVulkan()
+{
+    ImGui_ImplGlfw_InitForVulkan(window, true);
+    ImGui_ImplVulkan_InitInfo init_info = {};
+    init_info.Instance = instance;
+    init_info.PhysicalDevice = mainDevice.physicalDevice;
+    init_info.Device = mainDevice.logicalDevice;
+    init_info.QueueFamily = 0;
+    init_info.Queue = graphicsQueue;
+    init_info.PipelineCache = VK_NULL_HANDLE;
+    init_info.DescriptorPool = descriptorPool;
+    init_info.Subpass = 0;
+    init_info.MinImageCount = wd->ImageCount;
+    init_info.ImageCount = wd->ImageCount;
+    init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    init_info.Allocator = nullptr;
+    //init_info.CheckVkResultFn = check_vk_result;
+    ImGui_ImplVulkan_Init(&init_info, wd->RenderPass);
 }
 
 VkFormat VulkanRenderer::ChooseSupportedFormat(const std::vector<VkFormat>& formats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags)
@@ -883,6 +933,9 @@ void VulkanRenderer::RecordCommands(uint32_t currentImage)
         // execute pipeline
         vkCmdDrawIndexed(commandBuffers[currentImage], meshList[j].GetIndexCount(), 1, 0, 0, 0);
     }
+
+    ImDrawData* draw_data = ImGui::GetDrawData();
+    ImGui_ImplVulkan_RenderDrawData(draw_data, commandBuffers[currentImage]);
 
     // End render pass
     vkCmdEndRenderPass(commandBuffers[currentImage]);
@@ -1502,26 +1555,29 @@ void VulkanRenderer::CreateUniformBuffers()
 void VulkanRenderer::CreateDescriptorPool()
 {
 
-    VkDescriptorPoolSize poolSize = {};
-    poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSize.descriptorCount = static_cast<uint32_t>(uniformBuffer.size());
+    VkDescriptorPoolSize pool_sizes[] =
+    {
+        { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+        { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+        { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+        { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+        { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+        { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+    };
+    VkDescriptorPoolCreateInfo pool_info = {};
+    pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+    pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
+    pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
+    pool_info.pPoolSizes = pool_sizes;
 
 
-    //VkDescriptorPoolSize modelPoolSize = {};
-    //modelPoolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-    //modelPoolSize.descriptorCount = static_cast<uint32_t>(modelUniformBuffer.size());
-
-    std::vector<VkDescriptorPoolSize> descriptorPoolSizes = { poolSize/*, modelPoolSize*/ };
-
-    VkDescriptorPoolCreateInfo poolCreateInfo = {};
-    poolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    poolCreateInfo.maxSets = static_cast<uint32_t>(swapChainImages.size());     // Maximum number of descriptor sets that can be created from pool
-    poolCreateInfo.poolSizeCount = static_cast<uint32_t>(descriptorPoolSizes.size());                                         // Ammount of pool sizes being passed
-    poolCreateInfo.pPoolSizes = descriptorPoolSizes.data();                                    // Pool sizes to create pool with
-
-
-
-    VkResult result = vkCreateDescriptorPool(mainDevice.logicalDevice, &poolCreateInfo, nullptr, &descriptorPool);
+    VkResult result = vkCreateDescriptorPool(mainDevice.logicalDevice, &pool_info, nullptr, &descriptorPool);
 
     if (result != VK_SUCCESS)
     {
@@ -1698,7 +1754,7 @@ void VulkanRenderer::CreateTextureSampler()
 
 int VulkanRenderer::CreateTextureDescriptor(VkImageView textureImage)
 {
-    VkDescriptorSet descriptorSet;
+    VkDescriptorSet descriptorSetLocal;
 
     // Descriptor set allocation info
     VkDescriptorSetAllocateInfo setAllocateInfo = {};
@@ -1708,7 +1764,7 @@ int VulkanRenderer::CreateTextureDescriptor(VkImageView textureImage)
     setAllocateInfo.pSetLayouts = &samplerSetLayout;
 
     // Allocate descriptr sets
-    VkResult result = vkAllocateDescriptorSets(mainDevice.logicalDevice, &setAllocateInfo, &descriptorSet);
+    VkResult result = vkAllocateDescriptorSets(mainDevice.logicalDevice, &setAllocateInfo, &descriptorSetLocal);
 
     if (result != VK_SUCCESS)
     {
@@ -1723,7 +1779,7 @@ int VulkanRenderer::CreateTextureDescriptor(VkImageView textureImage)
     // Descriptor write info
     VkWriteDescriptorSet descriptorWrite = {};
     descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrite.dstSet = descriptorSet;
+    descriptorWrite.dstSet = descriptorSetLocal;
     descriptorWrite.dstBinding = 0;
     descriptorWrite.dstArrayElement = 0;
     descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -1734,7 +1790,7 @@ int VulkanRenderer::CreateTextureDescriptor(VkImageView textureImage)
     vkUpdateDescriptorSets(mainDevice.logicalDevice, 1, &descriptorWrite, 0, nullptr);
 
     // Add descriptor set to list
-    samplerDescriptorSets.push_back(descriptorSet);
+    samplerDescriptorSets.push_back(descriptorSetLocal);
 
     // Return descriptor set location
     return samplerDescriptorSets.size() - 1;

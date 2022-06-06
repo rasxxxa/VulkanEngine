@@ -14,7 +14,11 @@
 
 #include <iostream>
 #include <set>
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_vulkan.h"
 #include "Utilites.h"
+
 #include "Mesh.h"
 
 
@@ -183,6 +187,7 @@ private:
 	std::mt19937 mt;
 	std::uniform_real_distribution<float> distribution;
 	std::uniform_real_distribution<float> colorDistribution;
+	ImGui_ImplVulkanH_Window* wd;
 public:
 	VulkanRenderer();
 	virtual ~VulkanRenderer();
@@ -192,5 +197,10 @@ public:
 	void Draw();
 	inline std::vector<Mesh>& ReturnSceneObject() { return meshList; }
 	void AddRandomMesh();
+	void SetupImgui(ImGui_ImplVulkanH_Window* wd);
+	void InitForVulkan();
+	VkDevice GetLogicalDevice() { return mainDevice.logicalDevice; }
+	VkQueue GetGraphicsQueue() { return graphicsQueue; };
+
 };
 

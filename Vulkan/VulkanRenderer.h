@@ -21,7 +21,6 @@
 
 #include "Mesh.h"
 
-
 class VulkanRenderer
 {
 private:
@@ -31,6 +30,8 @@ private:
 		VkPhysicalDevice physicalDevice;
 		VkDevice logicalDevice;
 	} mainDevice;
+
+	long long unsigned int memoryUsed;
 
 	VkQueue graphicsQueue;
 	VkQueue presentationQueue;
@@ -201,6 +202,6 @@ public:
 	void InitForVulkan();
 	VkDevice GetLogicalDevice() { return mainDevice.logicalDevice; }
 	VkQueue GetGraphicsQueue() { return graphicsQueue; };
-
+	inline long long unsigned int GetDeviceMemory() const { return memoryUsed; }
 };
 

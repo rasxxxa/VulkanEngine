@@ -260,6 +260,7 @@ void RunWindow()
             ImGui::Text("counter = %d", renderer.ReturnSceneObject().size());
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+            ImGui::Text("Memory used: %.3f MB", renderer.GetDeviceMemory() / 1024.0f / 1024.0f);
             ImGui::End();
         }
 

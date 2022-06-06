@@ -451,7 +451,7 @@ void VulkanRenderer::AddRandomMesh()
                 };
 
         // Index data
-        Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &MESH_INDICES, 0);
+        Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &MESH_INDICES, CreateTexture("emoji.png"));
 
         meshList.push_back(firstMesh);
     }
@@ -1591,7 +1591,7 @@ void VulkanRenderer::CreateDescriptorPool()
 
     VkDescriptorPoolCreateInfo samplerPoolCreateInfo = {};
     samplerPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    samplerPoolCreateInfo.maxSets = MAX_OBJECTS;
+    samplerPoolCreateInfo.maxSets = 1000 * MAX_OBJECTS;
     samplerPoolCreateInfo.poolSizeCount = 1;
     samplerPoolCreateInfo.pPoolSizes = &samplerPoolSize;
 
@@ -1668,6 +1668,8 @@ int VulkanRenderer::CreateTextureImage(std::string fileName)
     int width, height;
     VkDeviceSize imageSize;
     auto imageData = LoadTextureFile(fileName, &width, &height, &imageSize);
+
+    memoryUsed += imageSize;
 
     // Creating staging buffer to hold loaded data
     VkBuffer imageStagingBuffer;
@@ -1841,6 +1843,7 @@ VulkanRenderer::VulkanRenderer()
     mt = std::mt19937(randomDevice());
     distribution = std::uniform_real_distribution<float>(-5.0f, 5.0f);
     colorDistribution = std::uniform_real_distribution<float>(0.0f, 1.0f);
+    memoryUsed = 0;
 }
 
 VulkanRenderer::~VulkanRenderer()

@@ -1,6 +1,10 @@
 #include "VulkanRenderer.h"
 
 #include <assert.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdexcept>
+#include <iostream>
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
@@ -635,7 +639,7 @@ bool VulkanRenderer::CheckDeviceSuitable(VkPhysicalDevice device)
         swapChainVaild = !details.presentationModes.empty() && !details.formats.empty();
     }
 
-    return indices.isValid() && extensionsSupported && swapChainVaild && deviceFeatures.samplerAnisotropy && deviceProperties.deviceType == VkPhysicalDeviceType::VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
+    return indices.isValid() && extensionsSupported && swapChainVaild && deviceFeatures.samplerAnisotropy;
 }
 
 void VulkanRenderer::CleanUp()

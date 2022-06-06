@@ -1,5 +1,7 @@
 #include "Mesh.h"
 #include <thread>
+#include <stdio.h>
+#include <string.h>
 
 Mesh::Mesh(VkPhysicalDevice device, VkDevice newDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex>* vertices, std::vector<uint32_t>* indices, int texId = -1)
 {

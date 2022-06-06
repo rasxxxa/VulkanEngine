@@ -70,7 +70,10 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 )
 
-target_link_libraries(${PROJECT_NAME}
-${CMAKE_CURRENT_SOURCE_DIR}/../externals/GLFW/GLFW/lib-vc2022/glfw3.lib
-C:/VulkanSDK/1.3.204.1/Lib32/vulkan-1.lib
-)
+#target_link_libraries(${PROJECT_NAME}
+#${CMAKE_CURRENT_SOURCE_DIR}/../externals/GLFW/GLFW/lib-vc2022/glfw3.lib
+#C:/VulkanSDK/1.3.204.1/Lib32/vulkan-1.lib
+#)
+
+find_package(glfw3 CONFIG REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE glfw vulkan)

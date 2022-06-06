@@ -558,9 +558,15 @@ void RunWindow()
                     firstModel = glm::rotate(firstModel, glm::radians(sizes[i]), glm::vec3(0.0f, 0.0f, 1.0f));
 
 
-                    ImGui::SliderFloat("translationX " + i, &poses[i][0], -2.0f, 2.0f);
-                    ImGui::SliderFloat("translationY " + i, &poses[i][1], -2.0f, 2.0f);
-                    ImGui::SliderFloat("translationZ " + i, &poses[i][2], -2.0f, 2.0f);
+                    std::string translationX = "translationX";
+                    std::string translationY = "translationY";
+                    std::string translationZ = "translationZ";
+                    translationX += std::to_string(i);
+                    translationY += std::to_string(i);
+                    translationZ += std::to_string(i);
+                    ImGui::SliderFloat(translationX.c_str(), &poses[i][0], -2.0f, 2.0f);
+                    ImGui::SliderFloat(translationY.c_str(), &poses[i][1], -2.0f, 2.0f);
+                    ImGui::SliderFloat(translationZ.c_str(), &poses[i][2], -2.0f, 2.0f);
                     ImGui::EndMenu();
                     firstModel = glm::translate(firstModel, glm::vec3(poses[i][0], poses[i][1], poses[i][2]));
                     renderer.ReturnSceneObject()[i].SetModel(firstModel);

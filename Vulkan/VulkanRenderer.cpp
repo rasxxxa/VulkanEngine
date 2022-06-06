@@ -430,28 +430,31 @@ void VulkanRenderer::Draw()
 
 void VulkanRenderer::AddRandomMesh()
 {
-    auto size = distribution(mt);
-    if (size < 1)
-        size = 1;
-
-    auto posX = distribution(mt);
-    auto posY = distribution(mt);
-    auto R = colorDistribution(mt);
-    auto G = colorDistribution(mt);
-    auto B = colorDistribution(mt);
-
-    std::vector<Vertex> meshVertices = 
+    for (size_t i = 0; i < ADD_RANDOM_MASHES; i++)
     {
-        { { posX, posY, 0.0 },{ R, G, B }, {1.0f, 1.0f}, 0.0f},	// 0
-        { { posX, posY - size, 0.0 },{ R, G, B }, {1.0f, 0.0f}, 0.0f},	    // 1
-        { { posX + size, posY - size, 0.0 },{ R, G, B }, {0.0f, 1.0f}, 0.0f },    // 2
-        { { posX + size, posY, 0.0 },{ R, G, B }, {0.0f, 1.0f}, 0.0f  },   // 3
-    };
+        auto size = distribution(mt);
+        if (size < 1)
+            size = 1;
 
-    // Index data
-    Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &MESH_INDICES, -1);
+        auto posX = distribution(mt);
+        auto posY = distribution(mt);
+        auto R = colorDistribution(mt);
+        auto G = colorDistribution(mt);
+        auto B = colorDistribution(mt);
 
-    meshList.push_back(firstMesh);
+        std::vector<Vertex> meshVertices =
+                {
+                        { { posX, posY, 0.0 },{ R, G, B }, {1.0f, 1.0f}, 0.0f},	// 0
+                        { { posX, posY - size, 0.0 },{ R, G, B }, {1.0f, 0.0f}, 0.0f},	    // 1
+                        { { posX + size, posY - size, 0.0 },{ R, G, B }, {0.0f, 1.0f}, 0.0f },    // 2
+                        { { posX + size, posY, 0.0 },{ R, G, B }, {0.0f, 1.0f}, 0.0f  },   // 3
+                };
+
+        // Index data
+        Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &MESH_INDICES, -1);
+
+        meshList.push_back(firstMesh);
+    }
 }
 
 VkFormat VulkanRenderer::ChooseSupportedFormat(const std::vector<VkFormat>& formats, VkImageTiling tiling, VkFormatFeatureFlags featureFlags)

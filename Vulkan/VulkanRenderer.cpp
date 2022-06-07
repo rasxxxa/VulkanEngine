@@ -432,22 +432,23 @@ void VulkanRenderer::AddRandomMesh()
 {
     for (size_t i = 0; i < ADD_RANDOM_MASHES; i++)
     {
-        auto size = distribution(mt);
-        if (size < 1)
-            size = 1;
+//        auto size = distribution(mt);
+//        if (size < 0)
+        auto size = 0.5f;
 
         auto posX = distribution(mt);
         auto posY = distribution(mt);
+        auto posZ = distribution(mt) + 0.5f;
         auto R = colorDistribution(mt);
         auto G = colorDistribution(mt);
         auto B = colorDistribution(mt);
 
         std::vector<Vertex> meshVertices =
                 {
-                        { { posX, posY, 0.0 },{ R, G, B }, {1.0f, 1.0f}, 1.0f},	// 0
-                        { { posX, posY - size, 0.0 },{ R, G, B }, {1.0f, 0.0f}, 1.0f},	    // 1
-                        { { posX + size, posY - size, 0.0 },{ R, G, B }, {0.0f, 1.0f}, 1.0f },    // 2
-                        { { posX + size, posY, 0.0 },{ R, G, B }, {0.0f, 1.0f}, 1.0f  },   // 3
+                        { { posX, posY, posZ },{ R, G, B }, {0.0f, 0.0f}, 1.0f},	// 0
+                        { { posX, posY - size, posZ },{ R, G, B }, {0.0f, 1.0f}, 1.0f},	    // 1
+                        { { posX + size, posY - size, posZ },{ R, G, B }, {1.0f, 1.0f}, 1.0f },    // 2
+                        { { posX + size, posY, posZ },{ R, G, B }, {1.0f, 0.0f}, 1.0f  },   // 3
                 };
 
         // Index data
@@ -1587,7 +1588,7 @@ void VulkanRenderer::CreateDescriptorPool()
     // Texture sampler pool
     VkDescriptorPoolSize samplerPoolSize = {};
     samplerPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    samplerPoolSize.descriptorCount = MAX_OBJECTS;
+    samplerPoolSize.descriptorCount = 1000 * MAX_OBJECTS;
 
     VkDescriptorPoolCreateInfo samplerPoolCreateInfo = {};
     samplerPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -1841,7 +1842,7 @@ VulkanRenderer::VulkanRenderer()
 {
     std::random_device randomDevice;
     mt = std::mt19937(randomDevice());
-    distribution = std::uniform_real_distribution<float>(-5.0f, 5.0f);
+    distribution = std::uniform_real_distribution<float>(-0.25f, 0.25f);
     colorDistribution = std::uniform_real_distribution<float>(0.0f, 1.0f);
     memoryUsed = 0;
 }
@@ -1884,32 +1885,32 @@ int VulkanRenderer::Init(GLFWwindow* newWindow)
         modelviewprojection.m_projection[1][1] *= -1;
 
         // Vertex data
-        std::vector<Vertex> meshVertices = {
-            { { -0.4, 0.4, 0.0 },{ 1.0f, 0.0f, 0.0f } , {1.0f, 1.0f}, 1.0f},	// 0
-            { { -0.4, -0.4, 0.0 },{ 1.0f, 0.0f, 0.0f }, {1.0f, 0.0f}, 1.0f},	    // 1
-            { { 0.4, -0.4, 0.0 },{ 1.0f, 0.0f, 0.0f } ,{0.0f, 0.0f}, 1.0f},    // 2
-            { { 0.4, 0.4, 0.0 },{ 1.0f, 0.0f, 0.0f }  ,{0.0f, 1.0f}, 1.0f},   // 3
-        };
-
-        std::vector<Vertex> meshVertices2 = {
-            { { -0.55, 0.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {1.0f, 1.0f}, 0.0f},	// 0
-            { { -0.25, -1.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {1.0f, 0.0f}, 0.0f},	    // 1
-            { { 0.25, -1.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {0.0f, 0.0f}, 0.0f },    // 2
-            { { 0.25, 0.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {0.0f, 1.0f}, 0.0f  },   // 3
-        };
-        // Index data
-
-
-        int texId = CreateTexture("emoji.png");
-        Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &MESH_INDICES, texId);
-        Mesh firstMesh2 = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices2, &MESH_INDICES, -1);
-
-        meshList.push_back(firstMesh);
-        meshList.push_back(firstMesh2);
-
-        glm::mat4 meshModelMatrix = meshList[0].GetModel().m_model;
-        meshModelMatrix = glm::rotate(meshModelMatrix, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-        meshList[0].SetModel(meshModelMatrix);
+//        std::vector<Vertex> meshVertices = {
+//            { { -0.4, 0.4, 0.0 },{ 1.0f, 0.0f, 0.0f } , {1.0f, 1.0f}, 1.0f},	// 0
+//            { { -0.4, -0.4, 0.0 },{ 1.0f, 0.0f, 0.0f }, {1.0f, 0.0f}, 1.0f},	    // 1
+//            { { 0.4, -0.4, 0.0 },{ 1.0f, 0.0f, 0.0f } ,{0.0f, 0.0f}, 1.0f},    // 2
+//            { { 0.4, 0.4, 0.0 },{ 1.0f, 0.0f, 0.0f }  ,{0.0f, 1.0f}, 1.0f},   // 3
+//        };
+//
+//        std::vector<Vertex> meshVertices2 = {
+//            { { -0.55, 0.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {1.0f, 1.0f}, 0.0f},	// 0
+//            { { -0.25, -1.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {1.0f, 0.0f}, 0.0f},	    // 1
+//            { { 0.25, -1.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {0.0f, 0.0f}, 0.0f },    // 2
+//            { { 0.25, 0.1, 0.0 },{ 0.0f, 0.0f, 1.0f }, {0.0f, 1.0f}, 0.0f  },   // 3
+//        };
+//        // Index data
+//
+//
+//        int texId = CreateTexture("emoji.png");
+//        Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &MESH_INDICES, texId);
+//        Mesh firstMesh2 = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices2, &MESH_INDICES, -1);
+//
+//        meshList.push_back(firstMesh);
+//        meshList.push_back(firstMesh2);
+//
+//        glm::mat4 meshModelMatrix = meshList[0].GetModel().m_model;
+//        meshModelMatrix = glm::rotate(meshModelMatrix, glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+//        meshList[0].SetModel(meshModelMatrix);
 
     }
     catch (const std::runtime_error& exeption)

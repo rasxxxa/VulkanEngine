@@ -10,7 +10,7 @@ const int MAX_FRAME_DRAWS = 2;
 
 const size_t MAX_OBJECTS = 2;
 
-const size_t ADD_RANDOM_MASHES = 800;
+const size_t ADD_RANDOM_MASHES = 1;
 
 static std::vector<uint32_t> MESH_INDICES =
 {

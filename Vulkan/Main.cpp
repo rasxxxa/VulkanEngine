@@ -163,7 +163,9 @@ void RunWindow()
     bool show_demo_window = true;
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
+    float angle = 0.0f;
+    float deltaTime = 0.0f;
+    float lastTime = 0.0f;
     // Main loop
     while (!glfwWindowShouldClose(window))
     {
@@ -194,8 +196,8 @@ void RunWindow()
         ImGui::NewFrame();
 
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
-        if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
+//        if (show_demo_window)
+//            ImGui::ShowDemoWindow(&show_demo_window);
 
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
@@ -223,6 +225,18 @@ void RunWindow()
                 poses.resize(size);
             }
 
+            float now = glfwGetTime();
+            deltaTime = now - lastTime;
+            lastTime = now;
+
+            angle += 50.0f * deltaTime;
+            if (angle > 360.0f) { angle -= 360.0f; }
+
+            glm::mat4 firstModel(1.0f);
+            firstModel = glm::rotate(firstModel, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
+
+
+            renderer.UpdateModel(firstModel, 0);
 
             for (size_t i = 0; i < size; i++)
             {

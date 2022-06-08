@@ -225,18 +225,17 @@ void RunWindow()
                 poses.resize(size);
             }
 
-            float now = glfwGetTime();
-            deltaTime = now - lastTime;
-            lastTime = now;
+            //float now = glfwGetTime();
+            //deltaTime = now - lastTime;
+            //lastTime = now;
 
-            angle += 50.0f * deltaTime;
-            if (angle > 360.0f) { angle -= 360.0f; }
+            //angle += 50.0f * deltaTime;
+            //if (angle > 360.0f) { angle -= 360.0f; }
 
-            glm::mat4 firstModel(1.0f);
-            firstModel = glm::rotate(firstModel, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
+            //glm::mat4 firstModel(1.0f);
+            //firstModel = glm::rotate(firstModel, glm::radians(angle), glm::vec3(0.0f, 0.0f, 1.0f));
+            //renderer.UpdateModel(firstModel, 0);
 
-
-            renderer.UpdateModel(firstModel, 0);
             if (PRINT_OBJECTS)
             {
                 for (size_t i = 0; i < size; i++)
@@ -269,7 +268,7 @@ void RunWindow()
             }
 
             if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                renderer.AddRandomMesh(2500);
+                renderer.AddRandomMesh(10);
             ImGui::SameLine();
             ImGui::Text("counter = %d", renderer.ReturnSceneObject().size());
 

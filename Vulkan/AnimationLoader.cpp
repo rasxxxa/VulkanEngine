@@ -7,7 +7,8 @@ AnimationLoader::AnimationLoader(const std::string& path, VulkanRenderer* r)
     m_path = animPath;
     renderer = r;
     mtRand = std::mt19937(randomDevice());
-    distribution = std::uniform_real_distribution<float>(-0.25, 0.25);
+    distributionX = std::uniform_real_distribution<float>(-0.5f, 0.1f);
+    distributionY = std::uniform_real_distribution<float>(0.0f, 0.4f);
     rangeMin = -1;
     rangeMax = -1;
 }
@@ -19,7 +20,8 @@ AnimationLoader::AnimationLoader(const std::string& path, unsigned int rangedMin
     m_path = animPath;
     renderer = r;
     mtRand = std::mt19937(randomDevice());
-    distribution = std::uniform_real_distribution<float>(-0.25, 0.25);
+    distributionX = std::uniform_real_distribution<float>(-0.5f, 0.1f);
+    distributionY = std::uniform_real_distribution<float>(0.0f, 0.4f);
     rangeMin = rangedMin;
     this->rangeMax = rangeMax;
 }
@@ -46,16 +48,16 @@ std::vector<Mesh> AnimationLoader::Load()
     {
         auto size = 0.5f;
 
-        auto posX = distribution(mtRand);
-        auto posY = distribution(mtRand);
-        auto posZ = distribution(mtRand) + 0.5f;
+        auto posX = distributionX(mtRand);
+        auto posY = distributionY(mtRand);
+        //auto posZ = distributionX(mtRand) + 0.5f;
 
         std::vector<Vertex> meshVertices =
         {
-                { { posX, posY, posZ },{ 0.0f, 0.0f, 0.0f }, {0.0f, 0.0f}, 1.0f},	// 0
-                { { posX, posY - size, posZ },{ 0.0f, 0.0f, 0.0f }, {0.0f, 1.0f}, 1.0f},	    // 1
-                { { posX + size, posY - size, posZ },{ 0.0f, 0.0f, 0.0f }, {1.0f, 1.0f}, 1.0f },    // 2
-                { { posX + size, posY, posZ },{ 0.0f, 0.0f, 0.0f }, {1.0f, 0.0f}, 1.0f  },   // 3
+                { { posX, posY, 1.0f },{ 0.0f, 0.0f, 0.0f }, {0.0f, 0.0f}, 1.0f},	// 0
+                { { posX, posY - size, 1.0f },{ 0.0f, 0.0f, 0.0f }, {0.0f, 1.0f}, 1.0f},	    // 1
+                { { posX + size, posY - size, 1.0f },{ 0.0f, 0.0f, 0.0f }, {1.0f, 1.0f}, 1.0f },    // 2
+                { { posX + size, posY, 1.0f },{ 0.0f, 0.0f, 0.0f }, {1.0f, 0.0f}, 1.0f  },   // 3
         };
 
         meshesLoaded.emplace_back(renderer->mainDevice.physicalDevice, renderer->mainDevice.logicalDevice, renderer->graphicsQueue, renderer->graphicsCommandPool, &meshVertices , &MESH_INDICES, renderer->CreateTexture(pathsToImages[tex]));

@@ -15,7 +15,8 @@ private:
 	VulkanRenderer* renderer;
 	std::mt19937 mtRand;
 	std::random_device randomDevice;
-	std::uniform_real_distribution<float> distribution;
+	std::uniform_real_distribution<float> distributionX;
+	std::uniform_real_distribution<float> distributionY;
 	long long rangeMin, rangeMax;
 
 public:

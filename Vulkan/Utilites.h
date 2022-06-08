@@ -12,6 +12,8 @@ const size_t MAX_OBJECTS = 2;
 
 const size_t ADD_RANDOM_MASHES = 1;
 
+const bool PRINT_OBJECTS = false;
+
 static std::vector<uint32_t> MESH_INDICES =
 {
 	0, 1, 2,

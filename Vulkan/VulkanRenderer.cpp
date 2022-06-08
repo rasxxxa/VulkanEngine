@@ -428,34 +428,10 @@ void VulkanRenderer::Draw()
     currentFrame = (currentFrame + 1) % MAX_FRAME_DRAWS;
 }
 
-void VulkanRenderer::AddRandomMesh()
+void VulkanRenderer::AddRandomMesh(uint32_t numberOfTextures)
 {
-    for (size_t i = 0; i < ADD_RANDOM_MASHES; i++)
-    {
-//        auto size = distribution(mt);
-//        if (size < 0)
-        auto size = 0.5f;
-
-        auto posX = distribution(mt);
-        auto posY = distribution(mt);
-        auto posZ = distribution(mt) + 0.5f;
-        auto R = colorDistribution(mt);
-        auto G = colorDistribution(mt);
-        auto B = colorDistribution(mt);
-
-        std::vector<Vertex> meshVertices =
-                {
-                        { { posX, posY, posZ },{ R, G, B }, {0.0f, 0.0f}, 1.0f},	// 0
-                        { { posX, posY - size, posZ },{ R, G, B }, {0.0f, 1.0f}, 1.0f},	    // 1
-                        { { posX + size, posY - size, posZ },{ R, G, B }, {1.0f, 1.0f}, 1.0f },    // 2
-                        { { posX + size, posY, posZ },{ R, G, B }, {1.0f, 0.0f}, 1.0f  },   // 3
-                };
-
-        // Index data
-        Mesh firstMesh = Mesh(mainDevice.physicalDevice, mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, &meshVertices, &MESH_INDICES, CreateTexture("emoji.png"));
-
-        meshList.push_back(firstMesh);
-    }
+    AnimationLoader loader("Textures\\3000", 0, numberOfTextures, this);
+    meshList = loader.Load();
 }
 
 void VulkanRenderer::SetupImgui(ImGui_ImplVulkanH_Window* window)
@@ -638,21 +614,27 @@ void VulkanRenderer::GetPhysicalDevice()
     std::vector<VkPhysicalDevice> deviceList(deviceCount);
     vkEnumeratePhysicalDevices(instance, &deviceCount, deviceList.data());
     
+    uint32_t bestDevicesProperty = 0;
+
     // Pick first device
     for (const auto& device : deviceList)
     {
         if (CheckDeviceSuitable(device))
         {
-            mainDevice.physicalDevice = device;
-            break;
+            VkPhysicalDeviceProperties deviceProperties;
+            vkGetPhysicalDeviceProperties(device, &deviceProperties);
+            if (bestDevicesProperty <= deviceProperties.limits.maxImageDimension1D)
+            {
+                bestDevicesProperty = deviceProperties.limits.maxImageDimension1D;
+                mainDevice.physicalDevice = device;
+            }          
+            
         }
     }
 
 
 
-    //Get properties of new device
-    VkPhysicalDeviceProperties deviceProperties;
-    vkGetPhysicalDeviceProperties(mainDevice.physicalDevice, &deviceProperties);
+
 
     //minUniformBUfferOffset = deviceProperties.limits.minUniformBufferOffsetAlignment;
 
@@ -1588,11 +1570,11 @@ void VulkanRenderer::CreateDescriptorPool()
     // Texture sampler pool
     VkDescriptorPoolSize samplerPoolSize = {};
     samplerPoolSize.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    samplerPoolSize.descriptorCount = 1000 * MAX_OBJECTS;
+    samplerPoolSize.descriptorCount = 1000 * MAX_OBJECTS * 2;
 
     VkDescriptorPoolCreateInfo samplerPoolCreateInfo = {};
     samplerPoolCreateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-    samplerPoolCreateInfo.maxSets = 1000 * MAX_OBJECTS;
+    samplerPoolCreateInfo.maxSets = 1000 * MAX_OBJECTS * 2;
     samplerPoolCreateInfo.poolSizeCount = 1;
     samplerPoolCreateInfo.pPoolSizes = &samplerPoolSize;
 
@@ -1824,7 +1806,7 @@ stbi_uc* VulkanRenderer::LoadTextureFile(std::string fileName, int* width, int* 
     int channels;
 
     // load pixel data for image
-    std::string fileLoc = "Textures/" + fileName;
+    std::string fileLoc = fileName;
     stbi_uc* image = stbi_load(fileLoc.c_str(), width, height, &channels, STBI_rgb_alpha);
 
     if (!image)

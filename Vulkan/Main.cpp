@@ -15,7 +15,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_vulkan.h"
 #include <string>
-
+#include "AnimationLoader.h"
 
 GLFWwindow* window;
 VulkanRenderer renderer;
@@ -237,39 +237,39 @@ void RunWindow()
 
 
             renderer.UpdateModel(firstModel, 0);
-
-            for (size_t i = 0; i < size; i++)
+            if (PRINT_OBJECTS)
             {
-                std::string itemMenu = "item Menu";
-                itemMenu += std::to_string(i);
-                if (ImGui::BeginMenu(itemMenu.c_str()))
+                for (size_t i = 0; i < size; i++)
                 {
-                    std::string r = "rotation";
-                    r += std::to_string(i);
-                    ImGui::SliderFloat(r.c_str(), &sizes[i], 0.0f, 360.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-                    glm::mat4 firstModel(1.0f);
-                    firstModel = glm::rotate(firstModel, glm::radians(sizes[i]), glm::vec3(0.0f, 0.0f, 1.0f));
+                    std::string itemMenu = "item Menu";
+                    itemMenu += std::to_string(i);
+                    if (ImGui::BeginMenu(itemMenu.c_str()))
+                    {
+                        std::string r = "rotation";
+                        r += std::to_string(i);
+                        ImGui::SliderFloat(r.c_str(), &sizes[i], 0.0f, 360.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+                        glm::mat4 firstModel(1.0f);
+                        firstModel = glm::rotate(firstModel, glm::radians(sizes[i]), glm::vec3(0.0f, 0.0f, 1.0f));
 
 
-                    std::string translationX = "translationX";
-                    std::string translationY = "translationY";
-                    std::string translationZ = "translationZ";
-                    translationX += std::to_string(i);
-                    translationY += std::to_string(i);
-                    translationZ += std::to_string(i);
-                    ImGui::SliderFloat(translationX.c_str(), &poses[i][0], -2.0f, 2.0f);
-                    ImGui::SliderFloat(translationY.c_str(), &poses[i][1], -2.0f, 2.0f);
-                    ImGui::SliderFloat(translationZ.c_str(), &poses[i][2], -2.0f, 2.0f);
-                    ImGui::EndMenu();
-                    firstModel = glm::translate(firstModel, glm::vec3(poses[i][0], poses[i][1], poses[i][2]));
-                    renderer.ReturnSceneObject()[i].SetModel(firstModel);
+                        std::string translationX = "translationX";
+                        std::string translationY = "translationY";
+                        std::string translationZ = "translationZ";
+                        translationX += std::to_string(i);
+                        translationY += std::to_string(i);
+                        translationZ += std::to_string(i);
+                        ImGui::SliderFloat(translationX.c_str(), &poses[i][0], -2.0f, 2.0f);
+                        ImGui::SliderFloat(translationY.c_str(), &poses[i][1], -2.0f, 2.0f);
+                        ImGui::SliderFloat(translationZ.c_str(), &poses[i][2], -2.0f, 2.0f);
+                        ImGui::EndMenu();
+                        firstModel = glm::translate(firstModel, glm::vec3(poses[i][0], poses[i][1], poses[i][2]));
+                        renderer.ReturnSceneObject()[i].SetModel(firstModel);
+                    }
                 }
-
-
-
             }
+
             if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                renderer.AddRandomMesh();
+                renderer.AddRandomMesh(2500);
             ImGui::SameLine();
             ImGui::Text("counter = %d", renderer.ReturnSceneObject().size());
 
@@ -312,6 +312,8 @@ int main()
 	// Create renderer
 	if (renderer.Init(window) == EXIT_FAILURE)
 		return EXIT_FAILURE;
+
+    //AnimationLoader load(, &renderer);
 
 	RunWindow();
 	renderer.CleanUp();

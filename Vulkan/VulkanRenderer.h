@@ -20,6 +20,8 @@
 #include "Utilites.h"
 
 #include "Mesh.h"
+#include "AnimationLoader.h"
+#include "Utilites.h"
 
 class VulkanRenderer
 {
@@ -30,6 +32,8 @@ private:
 		VkPhysicalDevice physicalDevice;
 		VkDevice logicalDevice;
 	} mainDevice;
+
+	friend class AnimationLoader;
 
 	long long unsigned int memoryUsed;
 
@@ -197,7 +201,7 @@ public:
 	void UpdateModel(glm::mat4 newModel, int modelId);
 	void Draw();
 	inline std::vector<Mesh>& ReturnSceneObject() { return meshList; }
-	void AddRandomMesh();
+	void AddRandomMesh(uint32_t numberOfTextures);
 	void SetupImgui(ImGui_ImplVulkanH_Window* wd);
 	void InitForVulkan();
 	VkDevice GetLogicalDevice() { return mainDevice.logicalDevice; }

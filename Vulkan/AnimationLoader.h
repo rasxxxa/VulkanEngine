@@ -5,7 +5,8 @@
 #include <random>
 #include "VulkanRenderer.h"
 #include "Mesh.h"
-
+#include <thread>
+#include <mutex>
 class VulkanRenderer;
 
 class AnimationLoader
@@ -23,5 +24,6 @@ public:
 	AnimationLoader(const std::string& path, VulkanRenderer* renderer);
 	AnimationLoader(const std::string& path, unsigned int rangedMin, unsigned int rangeMax, VulkanRenderer* renderer);
 	std::vector<Mesh> Load();
+	static std::recursive_mutex m_lock;
 };
 

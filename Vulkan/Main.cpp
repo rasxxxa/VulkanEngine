@@ -268,7 +268,7 @@ void RunWindow()
             }
 
             if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                renderer.AddRandomMesh(10);
+                renderer.AddRandomMesh(50);
             ImGui::SameLine();
             ImGui::Text("counter = %d", renderer.ReturnSceneObject().size());
 

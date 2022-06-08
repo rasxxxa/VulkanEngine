@@ -14,6 +14,11 @@ const size_t ADD_RANDOM_MASHES = 1;
 
 const bool PRINT_OBJECTS = false;
 
+//experimental
+const bool USE_THREAD_LOADING = true;
+
+const size_t NUMBER_OF_THREADS = 8;
+
 static std::vector<uint32_t> MESH_INDICES =
 {
 	0, 1, 2,

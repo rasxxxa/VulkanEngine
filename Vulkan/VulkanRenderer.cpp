@@ -1652,7 +1652,17 @@ int VulkanRenderer::CreateTextureImage(std::string fileName)
     VkDeviceSize imageSize;
     auto imageData = LoadTextureFile(fileName, &width, &height, &imageSize);
 
-    memoryUsed += imageSize;
+    if (USE_THREAD_LOADING)
+    {
+        std::unique_lock<std::recursive_mutex> lock(AnimationLoader::m_lock);
+        memoryUsed += imageSize;
+        lock.unlock();
+    }
+    else
+    {
+        memoryUsed += imageSize;
+    }
+    
 
     // Creating staging buffer to hold loaded data
     VkBuffer imageStagingBuffer;
@@ -1675,6 +1685,7 @@ int VulkanRenderer::CreateTextureImage(std::string fileName)
 
     texImage = CreateImage(width, height, VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, &texImageMemory);
 
+    std::unique_lock<std::recursive_mutex> lock(AnimationLoader::m_lock);
     // Trainsition image to be dst for copy operation
     TransitionImageLayout(mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, texImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 
@@ -1683,7 +1694,7 @@ int VulkanRenderer::CreateTextureImage(std::string fileName)
 
     // Trasnition image to be shader readable
     TransitionImageLayout(mainDevice.logicalDevice, graphicsQueue, graphicsCommandPool, texImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
+    lock.unlock();
 
     // Add texture data to vector for reference
     textureImages.push_back(texImage);
@@ -1903,3 +1914,5 @@ int VulkanRenderer::Init(GLFWwindow* newWindow)
 
     return EXIT_SUCCESS;
 }
+
+std::unordered_map<std::string, size_t> VulkanRenderer::imagesID;

@@ -22,6 +22,7 @@
 #include "Mesh.h"
 #include "AnimationLoader.h"
 #include "Utilites.h"
+#include <unordered_map>
 
 class VulkanRenderer
 {
@@ -34,7 +35,6 @@ private:
 	} mainDevice;
 
 	friend class AnimationLoader;
-
 	long long unsigned int memoryUsed;
 
 	VkQueue graphicsQueue;
@@ -165,7 +165,6 @@ private:
 	void CreateDescriptorSets();
 
 	int CreateTextureImage(std::string fileName);
-	int CreateTexture(std::string fileName);
 	void CreateTextureSampler();
 	int CreateTextureDescriptor(VkImageView textureImage);
 
@@ -194,6 +193,7 @@ private:
 	std::uniform_real_distribution<float> colorDistribution;
 	ImGui_ImplVulkanH_Window* wd;
 public:
+	int CreateTexture(std::string fileName);
 	VulkanRenderer();
 	virtual ~VulkanRenderer();
 	int Init(GLFWwindow* newWindow);
@@ -207,5 +207,6 @@ public:
 	VkDevice GetLogicalDevice() { return mainDevice.logicalDevice; }
 	VkQueue GetGraphicsQueue() { return graphicsQueue; };
 	inline long long unsigned int GetDeviceMemory() const { return memoryUsed; }
+	static std::unordered_map<std::string, size_t> imagesID;
 };
 

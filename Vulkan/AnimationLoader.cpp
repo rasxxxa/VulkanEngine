@@ -1,4 +1,7 @@
 #include "AnimationLoader.h"
+#include <chrono>
+
+std::recursive_mutex AnimationLoader::m_lock;
 
 AnimationLoader::AnimationLoader(const std::string& path, VulkanRenderer* r)
 {
@@ -26,6 +29,15 @@ AnimationLoader::AnimationLoader(const std::string& path, unsigned int rangedMin
     this->rangeMax = rangeMax;
 }
 
+void ThreadHelperFunc(std::vector<std::string>& images, size_t lowerBound, size_t upperBound, VulkanRenderer* renderer)
+{
+    for (size_t it = lowerBound; it < upperBound; it++)
+    {
+        VulkanRenderer::imagesID[images[it]] = renderer->CreateTexture(images[it]);
+    }
+    std::cout << "Thread finished: " << std::this_thread::get_id() << std::endl;
+}
+
 std::vector<Mesh> AnimationLoader::Load()
 {
     std::vector<Mesh> meshesLoaded;
@@ -41,31 +53,68 @@ std::vector<Mesh> AnimationLoader::Load()
         rangeMin = 0;
         rangeMax = pathsToImages.size();
     }
-
-#ifndef USE_MULTITHREADS
-
-    for (size_t tex = rangeMin; tex < rangeMax; tex++)
+    auto start = std::chrono::high_resolution_clock::now();
+    if (USE_THREAD_LOADING)
     {
-        auto size = 0.5f;
 
-        auto posX = distributionX(mtRand);
-        auto posY = distributionY(mtRand);
-        //auto posZ = distributionX(mtRand) + 0.5f;
+        size_t numberOfElementsPerThread = (rangeMax - rangeMin) / NUMBER_OF_THREADS;
+        std::vector<std::thread> threads;
 
-        std::vector<Vertex> meshVertices =
+        for (size_t thread = 0; thread < NUMBER_OF_THREADS; thread++)
         {
-                { { posX, posY, 1.0f },{ 0.0f, 0.0f, 0.0f }, {0.0f, 0.0f}, 1.0f},	// 0
-                { { posX, posY - size, 1.0f },{ 0.0f, 0.0f, 0.0f }, {0.0f, 1.0f}, 1.0f},	    // 1
-                { { posX + size, posY - size, 1.0f },{ 0.0f, 0.0f, 0.0f }, {1.0f, 1.0f}, 1.0f },    // 2
-                { { posX + size, posY, 1.0f },{ 0.0f, 0.0f, 0.0f }, {1.0f, 0.0f}, 1.0f  },   // 3
-        };
+            threads.emplace_back(ThreadHelperFunc, std::ref(pathsToImages), thread * numberOfElementsPerThread, ((thread == NUMBER_OF_THREADS - 1) ? rangeMax : (thread + 1) * numberOfElementsPerThread), renderer);
+        }
 
-        meshesLoaded.emplace_back(renderer->mainDevice.physicalDevice, renderer->mainDevice.logicalDevice, renderer->graphicsQueue, renderer->graphicsCommandPool, &meshVertices , &MESH_INDICES, renderer->CreateTexture(pathsToImages[tex]));
+        for (size_t thread = 0; thread < NUMBER_OF_THREADS; thread++)
+            threads[thread].join();
+
+        for (size_t tex = rangeMin; tex < rangeMax; tex++)
+        {
+            auto size = 0.5f;
+
+            auto posX = distributionX(mtRand);
+            auto posY = distributionY(mtRand);
+            //auto posZ = distributionX(mtRand) + 0.5f;
+
+            // Take random position for testing
+            std::vector<Vertex> meshVertices =
+            {
+                    { { posX, posY, 1.0f },{ 0.0f, 0.0f, 0.0f }, {0.0f, 0.0f}, 1.0f},	// 0
+                    { { posX, posY - size, 1.0f },{ 0.0f, 0.0f, 0.0f }, {0.0f, 1.0f}, 1.0f},	    // 1
+                    { { posX + size, posY - size, 1.0f },{ 0.0f, 0.0f, 0.0f }, {1.0f, 1.0f}, 1.0f },    // 2
+                    { { posX + size, posY, 1.0f },{ 0.0f, 0.0f, 0.0f }, {1.0f, 0.0f}, 1.0f  },   // 3
+            };
+
+            meshesLoaded.emplace_back(renderer->mainDevice.physicalDevice, renderer->mainDevice.logicalDevice, renderer->graphicsQueue, renderer->graphicsCommandPool, &meshVertices, &MESH_INDICES, VulkanRenderer::imagesID[pathsToImages[tex]]);
+        }
     }
+    else
+    {
+        for (size_t tex = rangeMin; tex < rangeMax; tex++)
+        {
+            auto size = 0.5f;
 
-#else
+            auto posX = distributionX(mtRand);
+            auto posY = distributionY(mtRand);
+            //auto posZ = distributionX(mtRand) + 0.5f;
 
-#endif // !THREADS
+            // Take random position for testing
+            std::vector<Vertex> meshVertices =
+            {
+                    { { posX, posY, 1.0f },{ 0.0f, 0.0f, 0.0f }, {0.0f, 0.0f}, 1.0f},	// 0
+                    { { posX, posY - size, 1.0f },{ 0.0f, 0.0f, 0.0f }, {0.0f, 1.0f}, 1.0f},	    // 1
+                    { { posX + size, posY - size, 1.0f },{ 0.0f, 0.0f, 0.0f }, {1.0f, 1.0f}, 1.0f },    // 2
+                    { { posX + size, posY, 1.0f },{ 0.0f, 0.0f, 0.0f }, {1.0f, 0.0f}, 1.0f  },   // 3
+            };
+
+            meshesLoaded.emplace_back(renderer->mainDevice.physicalDevice, renderer->mainDevice.logicalDevice, renderer->graphicsQueue, renderer->graphicsCommandPool, &meshVertices, &MESH_INDICES, renderer->CreateTexture(pathsToImages[tex]));
+        }
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    double difference = std::chrono::duration<double, std::milli>(end - start).count();
+
+    std::cout << "Loading time: " << difference << std::endl;
 
     return meshesLoaded;
 }
+

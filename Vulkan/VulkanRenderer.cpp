@@ -1360,14 +1360,34 @@ void VulkanRenderer::CreateGraphicsPipeline()
         throw std::runtime_error("Failed to create pipeline layout");
     }
 
-    // -- DEPTH STENCIL TESTING -- 
-    VkPipelineDepthStencilStateCreateInfo depthStencilInfo = {};
-    depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depthStencilInfo.depthTestEnable = VK_TRUE;  // Enable checking depth to determine fragment write
-    depthStencilInfo.depthWriteEnable = VK_TRUE; // Enable writing to depth buffer (to replace old values)
-    depthStencilInfo.depthCompareOp = VK_COMPARE_OP_LESS; // Comparisson operation that allows overwrite (is in front)
-    depthStencilInfo.depthBoundsTestEnable = VK_FALSE; // Depth bound test: does the depth value exist between two bounds
-    depthStencilInfo.stencilTestEnable = VK_FALSE; // Enable stencil test
+    VkPipelineDepthStencilStateCreateInfo depth_stencil_state_create_info{};
+    depth_stencil_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    depth_stencil_state_create_info.pNext = nullptr;
+    depth_stencil_state_create_info.flags = 0;
+    depth_stencil_state_create_info.depthTestEnable = VK_FALSE;
+    depth_stencil_state_create_info.depthWriteEnable = VK_FALSE;
+    depth_stencil_state_create_info.depthCompareOp = VK_COMPARE_OP_NEVER;
+    depth_stencil_state_create_info.depthBoundsTestEnable = VK_FALSE;
+    depth_stencil_state_create_info.stencilTestEnable = VK_FALSE;
+    depth_stencil_state_create_info.front.failOp = VK_STENCIL_OP_KEEP;
+    depth_stencil_state_create_info.front.passOp = VK_STENCIL_OP_KEEP;
+    depth_stencil_state_create_info.front.depthFailOp = VK_STENCIL_OP_KEEP;
+    depth_stencil_state_create_info.front.compareOp = VK_COMPARE_OP_NEVER;
+    depth_stencil_state_create_info.front.compareMask = 0;
+    depth_stencil_state_create_info.front.writeMask = 0;
+    depth_stencil_state_create_info.front.reference = 0;
+    depth_stencil_state_create_info.back = depth_stencil_state_create_info.front;
+    depth_stencil_state_create_info.minDepthBounds = 0.0f;
+    depth_stencil_state_create_info.maxDepthBounds = 1.0f;
+
+    //// -- DEPTH STENCIL TESTING -- 
+    //VkPipelineDepthStencilStateCreateInfo depthStencilInfo = {};
+    //depthStencilInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+    //depthStencilInfo.depthTestEnable = VK_TRUE;  // Enable checking depth to determine fragment write
+    //depthStencilInfo.depthWriteEnable = VK_TRUE; // Enable writing to depth buffer (to replace old values)
+    //depthStencilInfo.depthCompareOp = VK_COMPARE_OP_NEVER; // Comparisson operation that allows overwrite (is in front)
+    //depthStencilInfo.depthBoundsTestEnable = VK_FALSE; // Depth bound test: does the depth value exist between two bounds
+    //depthStencilInfo.stencilTestEnable = VK_FALSE; // Enable stencil test
 
     VkGraphicsPipelineCreateInfo pipelineGraphicsCreateInfo = {};
     pipelineGraphicsCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -1380,7 +1400,7 @@ void VulkanRenderer::CreateGraphicsPipeline()
     pipelineGraphicsCreateInfo.pRasterizationState = &rasterizerCreateInfo;
     pipelineGraphicsCreateInfo.pMultisampleState = &multisamplingCreateInfo;
     pipelineGraphicsCreateInfo.pColorBlendState = &colorBlendingCreateInfo;
-    pipelineGraphicsCreateInfo.pDepthStencilState = &depthStencilInfo;
+    pipelineGraphicsCreateInfo.pDepthStencilState = &depth_stencil_state_create_info;
     pipelineGraphicsCreateInfo.layout = pipelineLayout;                          // pipeline layout pipeline should use
     pipelineGraphicsCreateInfo.renderPass = renderPass;                          // renderpass description the pipeline is compatible with
     pipelineGraphicsCreateInfo.subpass = 0;                                      // subpass of render pass to use with pipeline

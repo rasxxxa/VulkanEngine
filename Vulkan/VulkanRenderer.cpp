@@ -683,6 +683,10 @@ void VulkanRenderer::CleanUp()
     // Wait untill no action is run on device
     vkDeviceWaitIdle(mainDevice.logicalDevice);
 
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+   // ImGui_ImplVulkanH_DestroyWindow(instance, mainDevice.logicalDevice, wd, nullptr);
     //_aligned_free(modelTransferSpace);
 
     vkDestroyDescriptorPool(mainDevice.logicalDevice, samplerDescriptorPool, nullptr);

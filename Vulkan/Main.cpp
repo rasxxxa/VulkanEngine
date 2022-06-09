@@ -315,6 +315,7 @@ int main()
     //AnimationLoader load(, &renderer);
 
 	RunWindow();
+
 	renderer.CleanUp();
 	Clear();
 	return 0;

@@ -151,6 +151,7 @@
     <ClCompile Include="..\externals\imggui\imgui_tables.cpp" />
     <ClCompile Include="..\externals\imggui\imgui_widgets.cpp" />
     <ClCompile Include="AnimationLoader.cpp" />
+    <ClCompile Include="Engine.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="VulkanRenderer.cpp" />
@@ -165,6 +166,7 @@
     <ClInclude Include="..\externals\imggui\imstb_textedit.h" />
     <ClInclude Include="..\externals\imggui\imstb_truetype.h" />
     <ClInclude Include="AnimationLoader.h" />
+    <ClInclude Include="Engine.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Utilites.h" />
     <ClInclude Include="VulkanRenderer.h" />

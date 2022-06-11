@@ -17,6 +17,7 @@ set(Headers
   "Utilites.h"
   "VulkanRenderer.h"
   "AnimationLoader.h"
+  "Engine.h"
 )
 
 set(Sources
@@ -31,6 +32,7 @@ set(Sources
   "Mesh.cpp"
   "VulkanRenderer.cpp"
   "AnimationLoader.cpp"
+  "Engine.cpp"
 )
 
 

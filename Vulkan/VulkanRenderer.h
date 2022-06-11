@@ -23,6 +23,7 @@
 #include "AnimationLoader.h"
 #include "Utilites.h"
 #include <unordered_map>
+#include <assert.h>
 
 class VulkanRenderer
 {

@@ -6,6 +6,10 @@
 #include <vector>
 #include "Utilites.h"
 
+#include "glm/glm.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/type_ptr.hpp"
+
 struct Model
 {
 	glm::mat4 m_model;
@@ -21,6 +25,8 @@ public:
 
 	VkBuffer GetVertexBuffer();
 	void DestroyBuffer();
+	void SetMeshSize(const std::pair<float, float>& size);
+	void SetMeshPosition(const std::pair<float, float>& position);
 
 	int GetIndexCount() { return indexCount; };
 	VkBuffer GetIndexBuffer() { return indexBuffer; };
@@ -31,6 +37,8 @@ public:
 
 private:
 	Model model;
+	float posX, posY;
+	float width, height;
 	int textureId;
 	int vertexCount;
 	VkBuffer vertexBuffer;

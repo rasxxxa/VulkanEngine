@@ -11,8 +11,11 @@ Mesh::Mesh(VkPhysicalDevice device, VkDevice newDevice, VkQueue transferQueue, V
 	this->device = newDevice;
 	CreateVertexBuffer(transferQueue, transferCommandPool, vertices);
 	CreateIndexBuffer(transferQueue, transferCommandPool, indices);
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	model.m_model = glm::mat4(1.0f);
+	posX = vertices[0][0].m_position.x;
+	posY = vertices[0][0].m_position.y;
+	width = vertices[0][3].m_position.x - vertices[0][0].m_position.x;
+	height = vertices[0][0].m_position.y - vertices[0][1].m_position.y;
 	textureId = texId;
 }
 
@@ -20,6 +23,8 @@ int Mesh::GetVertexCount()
 {
 	return vertexCount;
 }
+
+
 
 VkBuffer Mesh::GetVertexBuffer()
 {
@@ -33,6 +38,26 @@ void Mesh::DestroyBuffer()
 
 	vkDestroyBuffer(device, indexBuffer, nullptr);
 	vkFreeMemory(device, indexBufferMemory, nullptr);
+}
+
+// width, height
+void Mesh::SetMeshSize(const std::pair<float, float>& size)
+{
+	width = size.first / width;
+	height = size.second / height;
+	model.m_model = glm::scale(model.m_model, glm::vec3(width,height, 1.0f));
+	width = size.first;
+	height = size.second;
+
+}
+
+void Mesh::SetMeshPosition(const std::pair<float, float>& position)
+{
+	posY = position.second - posY;
+	posX = position.first - posX;
+	model.m_model = glm::translate(model.m_model, glm::vec3(posX, posY, 0.0f));
+	posX = position.first;
+	posY = position.second;
 }
 
 void Mesh::CreateVertexBuffer(VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex>* vertices)

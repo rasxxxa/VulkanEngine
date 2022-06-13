@@ -15,7 +15,7 @@ const size_t ADD_RANDOM_MASHES = 1;
 const bool PRINT_OBJECTS = false;
 
 //experimental
-const bool USE_THREAD_LOADING = true;
+const bool USE_THREAD_LOADING = false;
 
 const size_t NUMBER_OF_THREADS = 8;
 

@@ -44,8 +44,8 @@ void Engine::InitImGui()
 
 bool Engine::CreateWindow(const int width, const int height)
 {
-    // Initialize GLFW
     glfwInit();
+    // Initialize GLFW
 
     // Set glfw to not work with opengl
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -143,6 +143,18 @@ void Engine::RunWindow()
                     }
                 }
             }
+            if (ImGui::Button("Test"))
+            {
+                m_renderer->AddRandomMesh(1);
+            }
+            if (ImGui::Button("Test2"))
+            {
+                m_renderer->ReturnSceneObject()[0].SetMeshPosition({ 0.0f, 0.0f });
+            }
+            if (ImGui::Button("Test3"))
+            {
+                m_renderer->ReturnSceneObject()[0].SetMeshSize({ 1.0f, 1.0f });
+            }
 
             ImGui::SameLine();
             ImGui::Text("Number of objects = %u", m_renderer->ReturnSceneObject().size());
@@ -151,8 +163,9 @@ void Engine::RunWindow()
             ImGui::Text("Memory used: %.3f MB", m_renderer->GetDeviceMemory() / 1024.0f / 1024.0f);
         }
 
-        // Rendering
+        // Rendeing
         ImGui::Render();
+
         ImDrawData* draw_data = ImGui::GetDrawData();
         const bool is_minimized = (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f);
         if (!is_minimized)

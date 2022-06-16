@@ -24,6 +24,7 @@
 #include "Utilites.h"
 #include <unordered_map>
 #include <assert.h>
+#include "Engine.h"
 
 class VulkanRenderer
 {
@@ -36,6 +37,7 @@ private:
 	} mainDevice;
 
 	friend class AnimationLoader;
+	friend class Engine;
 	long long unsigned int memoryUsed;
 
 	VkQueue graphicsQueue;
@@ -45,9 +47,6 @@ private:
 
 	//VkDeviceSize minUniformBUfferOffset;
 	//size_t modelUniformAlignment;
-
-	// Scene objects
-	std::vector<Mesh> meshList;
 
 
 	// Scene settings
@@ -199,15 +198,12 @@ public:
 	virtual ~VulkanRenderer();
 	int Init(GLFWwindow* newWindow);
 	void CleanUp();
-	void UpdateModel(glm::mat4 newModel, int modelId);
 	void Draw();
-	inline std::vector<Mesh>& ReturnSceneObject() { return meshList; }
-	void AddRandomMesh(uint32_t numberOfTextures);
 	void SetupImgui(ImGui_ImplVulkanH_Window* wd);
 	void InitForVulkan();
 	VkDevice GetLogicalDevice() { return mainDevice.logicalDevice; }
 	VkQueue GetGraphicsQueue() { return graphicsQueue; };
 	inline long long unsigned int GetDeviceMemory() const { return memoryUsed; }
-	static std::unordered_map<std::string, size_t> imagesID;
+	static std::unordered_map<std::string, int> imagesID;
 };
 

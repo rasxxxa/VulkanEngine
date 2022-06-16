@@ -26,7 +26,7 @@ int Mesh::GetVertexCount()
 
 
 
-VkBuffer Mesh::GetVertexBuffer()
+VkBuffer Mesh::GetVertexBuffer() const
 {
 	return vertexBuffer;
 }
@@ -58,6 +58,31 @@ void Mesh::SetMeshPosition(const std::pair<float, float>& position)
 	model.m_model = glm::translate(model.m_model, glm::vec3(posX, posY, 0.0f));
 	posX = position.first;
 	posY = position.second;
+}
+
+void Mesh::AddVisual(const std::shared_ptr<Mesh>& visual)
+{
+	visual->m_parent = weak_from_this();
+	m_children.push_back(visual);
+}
+
+void Mesh::SetTexture(const std::string& texturePath)
+{
+	DestroyBuffer();
+
+	std::vector<Vertex> meshVertices =
+	{
+			{ { posX, posY, 1.0f },{ 0.0f, 0.0f, 0.0f }, {0.0f, 0.0f}, 1.0f},
+			{ { posX, posY - height, 1.0f },{ 0.0f, 0.0f, 0.0f }, {0.0f, 1.0f}, 1.0f},
+			{ { posX + width, posY - height, 1.0f },{ 0.0f, 0.0f, 0.0f }, {1.0f, 1.0f}, 1.0f },
+			{ { posX + width, posY, 1.0f },{ 0.0f, 0.0f, 0.0f }, {1.0f, 0.0f}, 1.0f  },
+	};
+
+	int texId = Engine::GetInstance().GetTextureId(texturePath);
+	this->textureId = texId;
+
+	CreateVertexBuffer(Engine::GetInstance().GetTransferQueue(), Engine::GetInstance().GetCommandPool(), &meshVertices);
+	CreateIndexBuffer(Engine::GetInstance().GetTransferQueue(), Engine::GetInstance().GetCommandPool(), &MESH_INDICES);
 }
 
 void Mesh::CreateVertexBuffer(VkQueue transferQueue, VkCommandPool transferCommandPool, std::vector<Vertex>* vertices)

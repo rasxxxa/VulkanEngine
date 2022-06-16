@@ -8,11 +8,11 @@
 #endif
 
 #include <thread>
+#include "VulkanRenderer.h"
 #include "Engine.h"
 
 int main()
 {
-
 	Engine::GetInstance().InitProgram(800, 600);
 	return 0;
 }

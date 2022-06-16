@@ -428,11 +428,6 @@ void VulkanRenderer::Draw()
     currentFrame = (currentFrame + 1) % MAX_FRAME_DRAWS;
 }
 
-void VulkanRenderer::AddRandomMesh(uint32_t numberOfTextures)
-{
-    AnimationLoader loader("Textures\\3000", 0, numberOfTextures, this);
-    meshList = loader.Load();
-}
 
 void VulkanRenderer::SetupImgui(ImGui_ImplVulkanH_Window* window)
 {
@@ -718,9 +713,6 @@ void VulkanRenderer::CleanUp()
         //vkFreeMemory(mainDevice.logicalDevice, modelUniformBufferMemory[i], nullptr);
     }
 
-    for (size_t i = 0; i < meshList.size(); i++)
-        meshList[i].DestroyBuffer();
-
     for (size_t i = 0; i < MAX_FRAME_DRAWS; i++)
     {
         vkDestroySemaphore(mainDevice.logicalDevice, renderFinished[i], nullptr);
@@ -749,14 +741,6 @@ void VulkanRenderer::CleanUp()
     vkDestroyInstance(instance, nullptr);
 }
 
-void VulkanRenderer::UpdateModel(glm::mat4 newModel, int modelId)
-{
-    if (static_cast<size_t>(modelId) >= meshList.size())
-        return;
-
-    meshList[modelId].SetModel(newModel);
-
-}
 
 QueueFamilyIndices VulkanRenderer::GetQueueFamilies(VkPhysicalDevice device)
 {
@@ -882,14 +866,18 @@ void VulkanRenderer::RecordCommands(uint32_t currentImage)
     // Bind pipeline to be used in render pass
     vkCmdBindPipeline(commandBuffers[currentImage], VkPipelineBindPoint::VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline);
 
-    for (size_t j = 0; j < meshList.size(); j++)
+    for (auto&& visual : Engine::m_meshes)
     {
-        VkBuffer vertexBuffers[] = { meshList[j].GetVertexBuffer() }; // buffers to bind
+        auto visualShared = visual.second.lock();
+        if (!visualShared)
+            continue;
+
+        VkBuffer vertexBuffers[] = { visualShared->GetVertexBuffer() }; // buffers to bind
         VkDeviceSize offsets[] = { 0 };  // offsets into buffers being bound
         vkCmdBindVertexBuffers(commandBuffers[currentImage], 0, 1, vertexBuffers, offsets); // command to bind vertex buffer before drawing to them
 
         // Bind mesh index buffer with 0 offset and using the uin32 type
-        vkCmdBindIndexBuffer(commandBuffers[currentImage], meshList[j].GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
+        vkCmdBindIndexBuffer(commandBuffers[currentImage], visualShared->GetIndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
 
         // Dynamic offset ammount 
         //uint32_t dynamicOffset = static_cast<uint32_t>(modelUniformAlignment) * j;
@@ -900,25 +888,26 @@ void VulkanRenderer::RecordCommands(uint32_t currentImage)
             VK_SHADER_STAGE_VERTEX_BIT,
             0,
             sizeof(Model),
-            (&meshList[j].GetModel()));
+            (&visualShared->GetModel()));
 
 
 
         // Bind descriptor sets
-        if (meshList[j].GetTexId() == -1)
+        if (visualShared->GetTexId() == -1)
         {
             vkCmdBindDescriptorSets(commandBuffers[currentImage], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
                 0, 1, &descriptorSets[currentImage], 0, nullptr);
         }
         else
         {
-            std::array<VkDescriptorSet, 2> descriptorSetGroup = { descriptorSets[currentImage], samplerDescriptorSets[meshList[j].GetTexId()] };
+            std::array<VkDescriptorSet, 2> descriptorSetGroup = { descriptorSets[currentImage], samplerDescriptorSets[visualShared->GetTexId()] };
             vkCmdBindDescriptorSets(commandBuffers[currentImage], VK_PIPELINE_BIND_POINT_GRAPHICS, pipelineLayout,
                 0, static_cast<uint32_t>(descriptorSetGroup.size()), descriptorSetGroup.data(), 0, nullptr);
         }
 
         // execute pipeline
-        vkCmdDrawIndexed(commandBuffers[currentImage], meshList[j].GetIndexCount(), 1, 0, 0, 0);
+        vkCmdDrawIndexed(commandBuffers[currentImage], visualShared->GetIndexCount(), 1, 0, 0, 0);
+        
     }
 
     ImDrawData* draw_data = ImGui::GetDrawData();
@@ -1734,6 +1723,9 @@ int VulkanRenderer::CreateTextureImage(std::string fileName)
 
 int VulkanRenderer::CreateTexture(std::string fileName)
 {
+    if (imagesID.find(fileName) != imagesID.end())
+        return imagesID[fileName];
+
     // Create TextureImage and get its location in array
     int textureImageLoc = CreateTextureImage(fileName);
 
@@ -1742,6 +1734,7 @@ int VulkanRenderer::CreateTexture(std::string fileName)
 
     int descriptorLoc = CreateTextureDescriptor(imageView);
 
+    imagesID[fileName] = descriptorLoc;
     return descriptorLoc;
 }
 
@@ -1939,4 +1932,4 @@ int VulkanRenderer::Init(GLFWwindow* newWindow)
     return EXIT_SUCCESS;
 }
 
-std::unordered_map<std::string, size_t> VulkanRenderer::imagesID;
+std::unordered_map<std::string, int> VulkanRenderer::imagesID;

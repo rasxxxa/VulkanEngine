@@ -1,5 +1,8 @@
 #include "Engine.h"
 
+std::unordered_map<unsigned long, std::weak_ptr<Mesh>> Engine::m_meshes;
+unsigned long Engine::objectCreated = 0;
+
 void Engine::InitImGui()
 {
     m_renderer->SetupImgui(&m_MainWindowData);
@@ -80,6 +83,21 @@ bool Engine::DestroyWindow()
     return true;
 }
 
+int Engine::GetTextureId(const std::string& path)
+{
+    return m_renderer->CreateTexture(path);
+}
+
+VkQueue Engine::GetTransferQueue()
+{
+    return m_renderer->graphicsQueue;
+}
+
+VkCommandPool Engine::GetCommandPool()
+{
+    return m_renderer->graphicsCommandPool;
+}
+
 void Engine::InitProgram(int width, int height)
 {
     CreateWindow(width, height);
@@ -95,6 +113,25 @@ Engine& Engine::GetInstance()
     return eng;
 }
 
+std::shared_ptr<Mesh> Engine::CreateMash()
+{
+    std::vector<Vertex> meshVertices =
+    {
+            { { -.01f, .01f, 1.0f  },    { 0.0f, 0.0f, 0.0f },   {0.0f, 0.0f},   0.0f},
+            { { -.01f, -.01f, 1.0f },    { 0.0f, 0.0f, 0.0f },   {0.0f, 1.0f},   0.0f},
+            { { .01f, -.01f, 1.0f  },    { 0.0f, 0.0f, 0.0f },   {1.0f, 1.0f},   0.0f},
+            { { .01f, .01f, 1.0f   },    { 0.0f, 0.0f, 0.0f },   {1.0f, 0.0f},   0.0f},
+    };
+
+    std::shared_ptr<Mesh> visual = std::make_shared<Mesh>(m_renderer->mainDevice.physicalDevice, m_renderer->mainDevice.logicalDevice, m_renderer->graphicsQueue, m_renderer->graphicsCommandPool, &meshVertices, &MESH_INDICES, 0);
+    m_meshes[objectCreated++] = visual;
+    return visual;
+}
+
+
+std::shared_ptr<Mesh> testObject;
+
+
 void Engine::RunWindow()
 {
     while (!glfwWindowShouldClose(m_window))
@@ -106,7 +143,7 @@ void Engine::RunWindow()
         ImGui::NewFrame();
 
         {
-            auto size = m_renderer->ReturnSceneObject().size();
+            auto size = m_meshes.size();
             static std::vector<float> sizes(size, 0);
             static std::vector<std::array<float, 3>> poses(size, { 0.0f, 0.0f, 0.0f });
 
@@ -143,24 +180,22 @@ void Engine::RunWindow()
                     }
                 }
             }
-            if (ImGui::Button("Test"))
-            {
-                m_renderer->AddRandomMesh(1);
-            }
-            if (ImGui::Button("Test2"))
-            {
-                m_renderer->ReturnSceneObject()[0].SetMeshPosition({ 0.0f, 0.0f });
-            }
-            if (ImGui::Button("Test3"))
-            {
-                m_renderer->ReturnSceneObject()[0].SetMeshSize({ 1.0f, 1.0f });
-            }
 
             ImGui::SameLine();
-            ImGui::Text("Number of objects = %u", m_renderer->ReturnSceneObject().size());
+            ImGui::Text("Number of objects = %u", m_meshes.size());
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::Text("Memory used: %.3f MB", m_renderer->GetDeviceMemory() / 1024.0f / 1024.0f);
+        }
+
+        if (ImGui::Button("Test 1"))
+        {
+            testObject = Engine::CreateMash();
+        }
+
+        if (ImGui::Button("Test 2"))
+        {
+            testObject->SetTexture("Textures\\emoji.png");
         }
 
         // Rendeing
@@ -183,6 +218,7 @@ void Engine::CreateRenderer()
         std::cout << "Error while initializing renderer" << std::endl;
         assert(false);
     };
+    m_renderer->CreateTexture("Textures\\1px.png");
 }
 
 void Engine::ShutdownApplication()

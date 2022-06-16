@@ -8,6 +8,7 @@
 #include <thread>
 #include <mutex>
 class VulkanRenderer;
+class Mesh;
 
 class AnimationLoader
 {

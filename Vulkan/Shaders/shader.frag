@@ -9,7 +9,7 @@ layout(location = 2) in float hasTex;
 
 void main()
 {
-   if (hasTex > 0)
+   if (hasTex > 0.5)
    {
     outColor = texture(textureSampler, fragTex);
    }
